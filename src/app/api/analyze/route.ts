@@ -7,7 +7,15 @@ import type { SearchParams, AnalysisResult, PlacesContext } from '@/types/analys
 export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as SearchParams
+  let body: SearchParams
+  try {
+    body = (await req.json()) as SearchParams
+  } catch {
+    return new Response(JSON.stringify({ error: 'Cuerpo de solicitud inválido' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
   const city = body.city?.trim()
   const businessType = body.business_type?.trim() || null
 
@@ -28,7 +36,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Fetch from Google Places
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY!
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: 'Configuración del servidor incompleta' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
   let context!: PlacesContext  // definite assignment — try block returns on error
 
   try {
