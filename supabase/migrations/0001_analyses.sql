@@ -12,4 +12,4 @@ create table analyses (
   created_at        timestamptz default now()
 );
 
-create index on analyses (cache_key, created_at desc);
+create index idx_analyses_cache_lookup on analyses (cache_key, created_at desc);
