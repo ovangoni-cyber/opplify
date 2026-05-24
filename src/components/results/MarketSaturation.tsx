@@ -1,7 +1,7 @@
 import { Progress } from '@/components/ui/progress'
-import type { MarketData } from '@/types/analysis'
+import type { MarketData, SaturationLevel } from '@/types/analysis'
 
-const SATURATION_LABELS: Record<string, string> = {
+const SATURATION_LABELS: Record<SaturationLevel, string> = {
   bajo: 'Bajo',
   medio: 'Medio',
   alto: 'Alto',
@@ -17,7 +17,7 @@ export function MarketSaturation({ market }: Props) {
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">Nivel</span>
         <span className="font-medium">
-          {SATURATION_LABELS[market.saturation_level] ?? market.saturation_level}
+          {SATURATION_LABELS[market.saturation_level]}
         </span>
       </div>
       <Progress value={market.saturation_score} className="h-2" />

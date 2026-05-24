@@ -17,7 +17,7 @@ export function OpportunityList({ opportunities }: Props) {
     <div className="space-y-3">
       <h3 className="font-semibold text-lg">Oportunidades detectadas</h3>
       {opportunities.map((op, i) => (
-        <div key={i} className="rounded-lg border bg-card p-4">
+        <div key={`${op.title}-${i}`} className="rounded-lg border bg-card p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <span className="font-medium text-sm">{op.title}</span>
             <div className="flex items-center gap-2 shrink-0">

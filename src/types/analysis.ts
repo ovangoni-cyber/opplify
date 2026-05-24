@@ -13,7 +13,7 @@ export type MarketData = {
 export type Opportunity = {
   title: string
   description: string
-  evidence: string
+  evidence?: string
   opportunity_score: number
   category: OpportunityCategory
 }
@@ -21,7 +21,7 @@ export type Opportunity = {
 export type PainPoint = {
   issue: string
   frequency: Frequency
-  example_quote: string
+  example_quote?: string
 }
 
 export type Zone = {

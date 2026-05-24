@@ -1,7 +1,8 @@
 import { Badge } from '@/components/ui/badge'
+import type { BadgeProps } from '@/components/ui/badge'
 import type { PainPoint } from '@/types/analysis'
 
-type Variant = 'default' | 'secondary' | 'destructive'
+type Variant = NonNullable<BadgeProps['variant']>
 
 const FREQ_VARIANT: Record<string, Variant> = {
   alta: 'destructive',
@@ -18,7 +19,7 @@ export function PainPoints({ painPoints }: Props) {
     <div className="space-y-3">
       <h3 className="font-semibold text-lg">Puntos débiles del mercado</h3>
       {painPoints.map((pp, i) => (
-        <div key={i} className="rounded-lg border bg-card p-4">
+        <div key={`${pp.issue}-${i}`} className="rounded-lg border bg-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium text-sm">{pp.issue}</span>
             <Badge variant={FREQ_VARIANT[pp.frequency] ?? 'secondary'} className="text-xs">
