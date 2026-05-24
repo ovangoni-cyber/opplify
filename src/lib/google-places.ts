@@ -1,7 +1,10 @@
 import type { NormalizedBusiness, PlacesContext } from '@/types/analysis'
 
 const PLACES_API_BASE = 'https://places.googleapis.com/v1'
-const FETCH_TIMEOUT_MS = 5000
+const FETCH_TIMEOUT_MS = 8000        // increased from 5s for reliability
+const MAX_REVIEW_BUSINESSES = 10     // max businesses to fetch reviews for
+const MAX_REVIEWS_PER_BUSINESS = 3
+const MAX_REVIEW_CHARS = 250
 
 type PlaceItem = {
   displayName?: { text: string }
@@ -45,10 +48,13 @@ async function searchPlacesPage(
 ): Promise<PlacesSearchResponse> {
   const body: Record<string, unknown> = {
     textQuery: query,
-    maxResultCount: 20,
     languageCode: 'es',
   }
-  if (pageToken) body.pageToken = pageToken
+  if (!pageToken) {
+    body.maxResultCount = 20
+  } else {
+    body.pageToken = pageToken
+  }
 
   const res = await fetchWithTimeout(`${PLACES_API_BASE}/places:searchText`, {
     method: 'POST',
@@ -101,8 +107,8 @@ async function fetchPlaceReviews(placeId: string, apiKey: string): Promise<strin
     const data: PlaceDetailResponse = await res.json()
     return (data.reviews ?? [])
       .filter((r) => r.text?.text)
-      .slice(0, 3)
-      .map((r) => r.text!.text.slice(0, 250))
+      .slice(0, MAX_REVIEWS_PER_BUSINESS)
+      .map((r) => r.text!.text.slice(0, MAX_REVIEW_CHARS))
   } catch {
     return []
   }
@@ -142,22 +148,27 @@ export async function fetchAndNormalizePlaces(
   const query = businessType ? `${businessType} en ${city}` : `negocios en ${city}`
   const places = await searchPlacesAll(query, apiKey)
 
-  const normalized: NormalizedBusiness[] = await Promise.all(
-    places.map(async (p) => {
-      const rating = p.rating ?? 0
-      const needsDetails = rating > 0 && rating < 3.5
-      const reviews = needsDetails && p.id ? await fetchPlaceReviews(p.id, apiKey) : []
-      return {
-        name: p.displayName?.text ?? 'Sin nombre',
-        rating,
-        review_count: p.userRatingCount ?? 0,
-        address: p.formattedAddress ?? '',
-        types: p.types ?? [],
-        price_level: priceLevelFromString(p.priceLevel),
-        recent_reviews: reviews,
-      }
+  // Fetch reviews sequentially for up to MAX_REVIEW_BUSINESSES low-rated businesses
+  let reviewFetchCount = 0
+  const normalized: NormalizedBusiness[] = []
+  for (const p of places) {
+    const rating = p.rating ?? 0
+    const needsDetails =
+      rating > 0 &&
+      rating < 3.5 &&
+      reviewFetchCount < MAX_REVIEW_BUSINESSES
+    const reviews = needsDetails && p.id ? await fetchPlaceReviews(p.id, apiKey) : []
+    if (needsDetails && p.id) reviewFetchCount++
+    normalized.push({
+      name: p.displayName?.text ?? 'Sin nombre',
+      rating,
+      review_count: p.userRatingCount ?? 0,
+      address: p.formattedAddress ?? '',
+      types: p.types ?? [],
+      price_level: priceLevelFromString(p.priceLevel),
+      recent_reviews: reviews,
     })
-  )
+  }
 
   const ratedRatings = normalized.filter((b) => b.rating > 0).map((b) => b.rating)
 

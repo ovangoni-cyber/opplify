@@ -50,4 +50,9 @@ describe('priceLevelFromString', () => {
   it('returns null for unknown string', () => {
     expect(priceLevelFromString('PRICE_LEVEL_UNKNOWN')).toBe(null)
   })
+
+  it('maps PRICE_LEVEL_FREE to 0 (falsy — must be checked with !== null)', () => {
+    expect(priceLevelFromString('PRICE_LEVEL_FREE')).toBe(0)
+    expect(priceLevelFromString('PRICE_LEVEL_FREE')).not.toBeNull()
+  })
 })
