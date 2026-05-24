@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\ovang\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\buscador de oportunidades\\\\docs\\\\superpowers\\\\plans\")",
+      "Bash(Out-Null)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
+      "Bash(npm --version)",
+      "Bash(npx --version)"
+    ]
+  }
+}
