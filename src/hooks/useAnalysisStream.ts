@@ -102,6 +102,13 @@ export function useAnalysisStream() {
             error: 'Error al parsear el análisis. Intenta de nuevo.',
           }))
         }
+      } else if (!isInJsonPhase && buffer.trim()) {
+        // Stream ended before JSON delimiter was received
+        setState((s) => ({
+          ...s,
+          phase: 'error',
+          error: 'Respuesta incompleta del servidor. Intenta de nuevo.',
+        }))
       }
     } catch (err) {
       setState((s) => ({
