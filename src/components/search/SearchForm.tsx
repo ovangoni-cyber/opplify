@@ -3,21 +3,22 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import type { SearchParams } from '@/types/analysis'
+import type { SearchParams, AppMode } from '@/types/analysis'
 
 type Props = {
   onSubmit: (params: SearchParams) => void
+  mode: AppMode
   loading?: boolean
 }
 
-export function SearchForm({ onSubmit, loading }: Props) {
+export function SearchForm({ onSubmit, mode, loading }: Props) {
   const [city, setCity] = useState('')
   const [businessType, setBusinessType] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!city.trim()) return
-    onSubmit({ city: city.trim(), business_type: businessType.trim() })
+    onSubmit({ city: city.trim(), business_type: businessType.trim(), mode })
   }
 
   return (
@@ -55,7 +56,7 @@ export function SearchForm({ onSubmit, loading }: Props) {
             Analizando...
           </span>
         ) : (
-          'Analizar mercado'
+          mode === 'agency_leads' ? 'Buscar leads' : 'Analizar mercado'
         )}
       </Button>
     </form>
