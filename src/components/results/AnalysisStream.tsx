@@ -3,12 +3,13 @@ import { OpportunityScore } from './OpportunityScore'
 import { MarketSaturation } from './MarketSaturation'
 import { OpportunityList } from './OpportunityList'
 import { PainPoints } from './PainPoints'
-import type { StreamState } from '@/types/analysis'
+import type { StreamState, AnalysisResult } from '@/types/analysis'
 
 type Props = { state: StreamState }
 
 export function AnalysisStream({ state }: Props) {
-  const { phase, summary, result, error } = state
+  const { phase, summary, result: rawResult, error } = state
+  const result = rawResult as AnalysisResult | null
 
   if (phase === 'idle') return null
 
