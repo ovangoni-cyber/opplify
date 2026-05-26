@@ -1,6 +1,16 @@
 export type SaturationLevel = 'bajo' | 'medio' | 'alto' | 'saturado'
 export type OpportunityCategory = 'categoria_faltante' | 'punto_debil' | 'tendencia' | 'zona'
 export type Frequency = 'baja' | 'media' | 'alta'
+export type AppMode = 'market_research' | 'agency_leads'
+export type AgencyService =
+  | 'seo'
+  | 'ai_automation'
+  | 'chatbot'
+  | 'branding'
+  | 'ads'
+  | 'web_redesign'
+  | 'crm'
+  | 'reputation'
 
 export type MarketData = {
   saturation_level: SaturationLevel
@@ -41,6 +51,25 @@ export type AnalysisResult = {
   model_used: string
 }
 
+export type AgencyLead = {
+  business_name: string
+  address: string
+  rating: number
+  review_count: number
+  lead_score: number
+  pain_points: string[]
+  recommended_services: AgencyService[]
+  summary: string
+  pitch: string
+}
+
+export type AgencyLeadsResult = {
+  leads: AgencyLead[]
+  total_analyzed: number
+  generated_at: string
+  model_used: string
+}
+
 export type StreamPhase =
   | 'idle'
   | 'loading'
@@ -52,13 +81,14 @@ export type StreamPhase =
 export type StreamState = {
   phase: StreamPhase
   summary: string
-  result: AnalysisResult | null
+  result: AnalysisResult | AgencyLeadsResult | null
   error: string | null
 }
 
 export type SearchParams = {
   city: string
   business_type: string
+  mode: AppMode
 }
 
 // Internal type — never sent to the client
