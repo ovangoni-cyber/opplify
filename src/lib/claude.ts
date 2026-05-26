@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { PlacesContext, AnalysisResult } from '@/types/analysis'
+import type { PlacesContext, AnalysisResult, AgencyLeadsResult, AppMode } from '@/types/analysis'
 
 const MODEL = 'claude-sonnet-4-6'
 export const JSON_DELIMITER = '---JSON---'
@@ -10,6 +10,14 @@ export function parseAnalysisJson(raw: string): AnalysisResult {
     throw new Error('Invalid analysis JSON: missing opportunity_score')
   }
   return parsed as AnalysisResult
+}
+
+export function parseAgencyLeadsJson(raw: string): AgencyLeadsResult {
+  const parsed = JSON.parse(raw.trim())
+  if (!Array.isArray(parsed.leads)) {
+    throw new Error('Invalid agency leads JSON: missing leads array')
+  }
+  return parsed as AgencyLeadsResult
 }
 
 function buildPrompt(
@@ -99,7 +107,7 @@ export async function streamAnalysis(
 
   const stream = client.messages.stream({
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [{ role: 'user', content: prompt }],
   })
 
