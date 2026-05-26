@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { fetchAndNormalizePlaces } from '@/lib/google-places'
 import { streamAnalysis, JSON_DELIMITER } from '@/lib/claude'
 import { getCachedAnalysis, saveAnalysis } from '@/lib/analysis-cache'
-import type { SearchParams, AnalysisResult, PlacesContext } from '@/types/analysis'
+import type { SearchParams, AnalysisResult, AgencyLeadsResult, PlacesContext, AppMode } from '@/types/analysis'
 
 export const runtime = 'edge'
 
@@ -16,8 +16,10 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
   const city = body.city?.trim()
   const businessType = body.business_type?.trim() || null
+  const mode: AppMode = body.mode === 'agency_leads' ? 'agency_leads' : 'market_research'
 
   if (!city) {
     return new Response(JSON.stringify({ error: 'Ciudad requerida' }), {
@@ -26,8 +28,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Cache hit: return immediately as plain text with CACHED marker
-  const cached = await getCachedAnalysis(city, businessType)
+  const cached = await getCachedAnalysis(city, businessType, mode)
   if (cached) {
     const payload = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
     return new Response(payload, {
@@ -35,7 +36,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Fetch from Google Places
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'Configuración del servidor incompleta' }), {
@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     })
   }
-  let context!: PlacesContext  // definite assignment — try block returns on error
 
+  let context!: PlacesContext
   try {
     context = await fetchAndNormalizePlaces(city, businessType, apiKey)
   } catch (err) {
@@ -55,7 +55,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Stream Claude analysis to the client
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
   const encoder = new TextEncoder()
@@ -68,9 +67,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  let analysisResult: AnalysisResult | null = null
+  let analysisResult: AnalysisResult | AgencyLeadsResult | null = null
 
-  const streamPromise = streamAnalysis(city, businessType, context, async (chunk) => {
+  const streamPromise = streamAnalysis(city, businessType, context, mode, async (chunk) => {
     await writer.write(encoder.encode(chunk))
   })
     .then(async (result) => {
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
       }
     })
 
-  // Save to DB after stream completes — non-blocking relative to the response
   streamPromise.then(() => {
     if (analysisResult) {
       void saveAnalysis(
@@ -95,7 +93,8 @@ export async function POST(req: NextRequest) {
         businessType,
         analysisResult,
         context.total_count,
-        context.avg_rating
+        context.avg_rating,
+        mode
       ).catch((err) => console.error('Cache save failed:', err))
     }
   })
