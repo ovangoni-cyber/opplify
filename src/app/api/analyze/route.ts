@@ -53,11 +53,13 @@ export async function POST(req: NextRequest) {
     context = await fetchAndNormalizePlaces(city, businessType, apiKey)
     if (hasExclusions) {
       const excludeSet = new Set(exclude.map((n) => n.toLowerCase()))
+      const filteredBusinesses = context.businesses.filter(
+        (b) => !excludeSet.has(b.name.toLowerCase())
+      )
       context = {
         ...context,
-        businesses: context.businesses.filter(
-          (b) => !excludeSet.has(b.name.toLowerCase())
-        ),
+        businesses: filteredBusinesses,
+        total_count: filteredBusinesses.length,
       }
     }
   } catch (err) {

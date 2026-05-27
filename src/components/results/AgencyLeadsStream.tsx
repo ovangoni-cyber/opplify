@@ -82,6 +82,11 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
           loadingMore={loadingMore}
         />
       )}
+      {loadMoreState.phase === 'error' && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
+          {loadMoreState.error ?? 'Error al cargar más leads. Intenta de nuevo.'}
+        </div>
+      )}
     </div>
   )
 }
