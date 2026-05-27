@@ -89,6 +89,7 @@ export type SearchParams = {
   city: string
   business_type: string
   mode: AppMode
+  exclude?: string[]
 }
 
 // Internal type — never sent to the client
