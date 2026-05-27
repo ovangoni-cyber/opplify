@@ -35,9 +35,9 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
           const newLeads = result.leads.filter(
             (l) => !existingNames.has(l.business_name.toLowerCase())
           )
+          setCanLoadMore(newLeads.length >= 10)
           return [...prev, ...newLeads]
         })
-        setCanLoadMore(result.leads.length >= 10)
       }
     }
   }, [loadMoreState.phase, loadMoreState.result])
