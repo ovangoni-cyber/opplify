@@ -21,7 +21,7 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
       const result = state.result as AgencyLeadsResult | null
       if (result?.leads && result.leads.length > 0) {
         setAccumulatedLeads(result.leads)
-        setCanLoadMore(true)
+        setCanLoadMore(result.leads.length >= 10)
       }
     }
   }, [state.phase, state.result])
