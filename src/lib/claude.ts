@@ -102,18 +102,18 @@ function buildAgencyLeadsPrompt(
   const typeLabel = businessType ?? 'todos los tipos de negocio'
 
   const businessSummary = context.businesses
-    .slice(0, 40)
+    .slice(0, 20)
     .map(
       (b) =>
         `- ${b.name} | ${b.rating > 0 ? b.rating + '★' : 'sin rating'} (${b.review_count} reseñas) | ${b.address}${
           b.recent_reviews.length > 0
-            ? '\n  Reseñas: ' + b.recent_reviews.slice(0, 3).join(' | ')
+            ? '\n  Reseñas: ' + b.recent_reviews.slice(0, 2).join(' | ')
             : ''
         }`
     )
     .join('\n')
 
-  return `Eres un analista de prospección comercial para agencias digitales. Analiza cada negocio de "${typeLabel}" en ${city} como lead potencial para servicios de marketing, automatización, SEO, diseño web o IA.
+  return `Eres un analista de prospección comercial para agencias digitales. Analiza los negocios de "${typeLabel}" en ${city} como leads potenciales para servicios de marketing, automatización, SEO, diseño web o IA.
 
 DATOS GLOBALES: ${context.total_count} negocios | Rating promedio: ${context.avg_rating}
 
@@ -122,20 +122,20 @@ ${businessSummary}
 
 INSTRUCCIONES:
 1. Escribe exactamente esta línea sin nada antes: ${JSON_DELIMITER}
-2. Devuelve el JSON estructurado según este schema exacto:
+2. Devuelve los TOP 10 leads con mayor potencial como JSON:
 
 {
   "leads": [
     {
       "business_name": "nombre del negocio",
       "address": "dirección",
-      "rating": <número con un decimal>,
-      "review_count": <número entero>,
+      "rating": <número>,
+      "review_count": <número>,
       "lead_score": <0-100>,
-      "pain_points": ["problema específico detectado en lenguaje directo", ...],
+      "pain_points": ["problema detectado"],
       "recommended_services": ["seo"|"ai_automation"|"chatbot"|"branding"|"ads"|"web_redesign"|"crm"|"reputation"],
-      "summary": "resumen de 1-2 frases del negocio como prospecto de agencia",
-      "pitch": "argumento de venta personalizado de 2-3 frases para este negocio"
+      "summary": "1 frase sobre el negocio",
+      "pitch": "1-2 frases de argumento de venta"
     }
   ],
   "total_analyzed": ${context.total_count},
@@ -143,13 +143,10 @@ INSTRUCCIONES:
   "model_used": "${MODEL}"
 }
 
-CRITERIOS DE SCORING (lead_score 0-100, mayor = mejor prospecto para agencia):
-- Rating < 3.5★: suma 30 puntos (problemas de reputación urgentes)
-- Menos de 20 reseñas: suma 20 puntos (presencia online débil)
-- Reseñas mencionan esperas, sin reservas, sin respuesta del negocio: suma 15 pts cada señal
-- Rating 3.5-4.0★ con volumen alto: suma 10 puntos (potencial de mejora)
+SCORING (lead_score 0-100):
+- Rating < 3.5★: +30pts | Pocas reseñas: +20pts | Sin respuesta a reviews: +20pts | Señales de ineficiencia: +15pts
 
-Ordena los leads por lead_score descendente. Incluye TODOS los negocios evaluados.`
+Devuelve exactamente 10 leads ordenados por lead_score descendente.`
 }
 
 export async function streamAnalysis(
