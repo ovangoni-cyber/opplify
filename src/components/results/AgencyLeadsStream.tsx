@@ -1,11 +1,58 @@
-import { ExecutiveSummary } from './ExecutiveSummary'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useAnalysisStream } from '@/hooks/useAnalysisStream'
 import { AgencyLeadsList } from './AgencyLeadsList'
-import type { StreamState, AgencyLeadsResult } from '@/types/analysis'
+import type { StreamState, AgencyLead, AgencyLeadsResult } from '@/types/analysis'
 
-type Props = { state: StreamState }
+type Props = {
+  state: StreamState
+  city: string
+  businessType: string
+}
 
-export function AgencyLeadsStream({ state }: Props) {
-  const { phase, summary, result, error } = state
+export function AgencyLeadsStream({ state, city, businessType }: Props) {
+  const { state: loadMoreState, analyze: loadMoreAnalyze } = useAnalysisStream()
+  const [accumulatedLeads, setAccumulatedLeads] = useState<AgencyLead[]>([])
+  const [canLoadMore, setCanLoadMore] = useState(false)
+
+  useEffect(() => {
+    if (state.phase === 'complete') {
+      const result = state.result as AgencyLeadsResult | null
+      if (result?.leads && result.leads.length > 0) {
+        setAccumulatedLeads(result.leads)
+        setCanLoadMore(true)
+      }
+    }
+  }, [state.phase, state.result])
+
+  useEffect(() => {
+    if (loadMoreState.phase === 'complete') {
+      const result = loadMoreState.result as AgencyLeadsResult | null
+      if (result?.leads) {
+        setAccumulatedLeads((prev) => {
+          const existingNames = new Set(prev.map((l) => l.business_name.toLowerCase()))
+          const newLeads = result.leads.filter(
+            (l) => !existingNames.has(l.business_name.toLowerCase())
+          )
+          return [...prev, ...newLeads]
+        })
+        setCanLoadMore(result.leads.length >= 10)
+      }
+    }
+  }, [loadMoreState.phase, loadMoreState.result])
+
+  const handleLoadMore = () => {
+    const excludeNames = accumulatedLeads.map((l) => l.business_name)
+    loadMoreAnalyze({ city, business_type: businessType, mode: 'agency_leads', exclude: excludeNames })
+  }
+
+  const loadingMore =
+    loadMoreState.phase === 'loading' ||
+    loadMoreState.phase === 'streaming_summary' ||
+    loadMoreState.phase === 'streaming_json'
+
+  const { phase, error } = state
 
   if (phase === 'idle') return null
 
@@ -26,18 +73,14 @@ export function AgencyLeadsStream({ state }: Props) {
     )
   }
 
-  const leadsResult = result as AgencyLeadsResult | null
-
   return (
     <div className="space-y-6">
-      {summary && (
-        <ExecutiveSummary
-          summary={summary}
-          streaming={phase === 'streaming_summary'}
+      {accumulatedLeads.length > 0 && (
+        <AgencyLeadsList
+          leads={accumulatedLeads}
+          onLoadMore={canLoadMore ? handleLoadMore : undefined}
+          loadingMore={loadingMore}
         />
-      )}
-      {leadsResult?.leads && leadsResult.leads.length > 0 && (
-        <AgencyLeadsList leads={leadsResult.leads} />
       )}
     </div>
   )
