@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
   const city = body.city?.trim()
   const businessType = body.business_type?.trim() || null
   const mode: AppMode = body.mode === 'agency_leads' ? 'agency_leads' : 'market_research'
+  const exclude: string[] = Array.isArray(body.exclude) ? body.exclude : []
+  const hasExclusions = exclude.length > 0
 
   if (!city) {
     return new Response(JSON.stringify({ error: 'Ciudad requerida' }), {
@@ -28,12 +30,14 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const cached = await getCachedAnalysis(city, businessType, mode)
-  if (cached) {
-    const payload = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
-    return new Response(payload, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    })
+  if (!hasExclusions) {
+    const cached = await getCachedAnalysis(city, businessType, mode)
+    if (cached) {
+      const payload = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
+      return new Response(payload, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
   }
 
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
@@ -47,6 +51,15 @@ export async function POST(req: NextRequest) {
   let context!: PlacesContext
   try {
     context = await fetchAndNormalizePlaces(city, businessType, apiKey)
+    if (hasExclusions) {
+      const excludeSet = new Set(exclude.map((n) => n.toLowerCase()))
+      context = {
+        ...context,
+        businesses: context.businesses.filter(
+          (b) => !excludeSet.has(b.name.toLowerCase())
+        ),
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error de Google Places'
     return new Response(JSON.stringify({ error: message }), {
@@ -87,7 +100,7 @@ export async function POST(req: NextRequest) {
     })
 
   streamPromise.then(() => {
-    if (analysisResult) {
+    if (analysisResult && !hasExclusions) {
       void saveAnalysis(
         city,
         businessType,
