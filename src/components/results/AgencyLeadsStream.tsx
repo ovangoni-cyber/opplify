@@ -17,7 +17,7 @@ export function AgencyLeadsStream({ state }: Props) {
     )
   }
 
-  if (phase === 'loading') {
+  if (phase === 'loading' || phase === 'streaming_summary' || phase === 'streaming_json') {
     return (
       <div className="flex items-center gap-3 text-muted-foreground py-8">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />

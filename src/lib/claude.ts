@@ -121,9 +121,8 @@ NEGOCIOS A EVALUAR:
 ${businessSummary}
 
 INSTRUCCIONES:
-1. Escribe un resumen ejecutivo de 1-2 párrafos sobre el panorama de oportunidades para agencias en este sector y ciudad.
-2. Escribe exactamente esta línea: ${JSON_DELIMITER}
-3. Devuelve el JSON estructurado según este schema exacto:
+1. Escribe exactamente esta línea sin nada antes: ${JSON_DELIMITER}
+2. Devuelve el JSON estructurado según este schema exacto:
 
 {
   "leads": [
