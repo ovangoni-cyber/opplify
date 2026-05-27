@@ -6,9 +6,13 @@ import type { AgencyLead } from '@/types/analysis'
 
 const PAGE_SIZE = 10
 
-type Props = { leads: AgencyLead[] }
+type Props = {
+  leads: AgencyLead[]
+  onLoadMore?: () => void
+  loadingMore?: boolean
+}
 
-export function AgencyLeadsList({ leads }: Props) {
+export function AgencyLeadsList({ leads, onLoadMore, loadingMore }: Props) {
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? leads : leads.slice(0, PAGE_SIZE)
   const remaining = leads.length - PAGE_SIZE
@@ -28,6 +32,22 @@ export function AgencyLeadsList({ leads }: Props) {
           className="w-full py-3 rounded-xl border border-dashed text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
         >
           Ver {remaining} leads más
+        </button>
+      )}
+      {onLoadMore && (
+        <button
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="w-full py-3 rounded-xl border border-primary text-sm text-primary hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loadingMore ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Buscando más leads...
+            </>
+          ) : (
+            'Cargar más leads'
+          )}
         </button>
       )}
     </div>
