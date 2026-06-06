@@ -1,12 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 export type Theme = 'light' | 'dark' | 'hybrid'
 
-const THEMES: Theme[] = ['light', 'dark', 'hybrid']
-const STORAGE_KEY = 'theme'
-const DEFAULT_THEME: Theme = 'light'
+export const THEMES: Theme[] = ['light', 'dark', 'hybrid']
+export const STORAGE_KEY = 'theme'
+export const DEFAULT_THEME: Theme = 'light'
 
 type ThemeContextValue = {
   theme: Theme
@@ -26,7 +26,7 @@ function isTheme(value: string | null): value is Theme {
   return THEMES.includes(value as Theme)
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME)
 
   useEffect(() => {
