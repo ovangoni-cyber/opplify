@@ -43,6 +43,7 @@
   --border: #e2e8f0;
 }
 
+/* mirrors :root defaults — keep both in sync if :root values change */
 [data-theme="dark"] {
   --background: #06060f;
   --foreground: #e2e8f0;
@@ -78,9 +79,9 @@
   --muted-foreground: #475569;
   --accent: #38bdf8;
   --accent-foreground: #0f172a;
-  --input: #1e293b;
+  --input: #e2e8f0;
   --ring: #38bdf8;
-  --border: #1e293b;
+  --border: #e2e8f0;
 }
 
 @theme inline {
