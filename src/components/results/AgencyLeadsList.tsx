@@ -19,17 +19,23 @@ export function AgencyLeadsList({ leads, onLoadMore, loadingMore }: Props) {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">
+      <h3 className="font-heading font-semibold text-base">
         Leads detectados{' '}
-        <span className="text-muted-foreground font-normal text-base">({leads.length})</span>
+        <span className="text-muted-foreground font-normal text-sm">({leads.length})</span>
       </h3>
       {visible.map((lead, i) => (
-        <AgencyLeadCard key={`${lead.business_name}-${i}`} lead={lead} />
+        <div
+          key={`${lead.business_name}-${i}`}
+          className="stagger-item"
+          style={{ animationDelay: `${Math.min(i * 50, 400)}ms` }}
+        >
+          <AgencyLeadCard lead={lead} />
+        </div>
       ))}
       {!showAll && remaining > 0 && (
         <button
           onClick={() => setShowAll(true)}
-          className="w-full py-3 rounded-xl border border-dashed text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+          className="btn-press w-full py-3 rounded-xl border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
         >
           Ver {remaining} leads más
         </button>
@@ -38,15 +44,15 @@ export function AgencyLeadsList({ leads, onLoadMore, loadingMore }: Props) {
         <button
           onClick={onLoadMore}
           disabled={loadingMore}
-          className="w-full py-3 rounded-xl border border-primary text-sm text-primary hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="btn-press w-full py-3 rounded-xl border border-primary/40 text-sm text-primary hover:bg-primary/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loadingMore ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               Buscando más leads...
             </>
           ) : (
-            'Cargar más leads'
+            'Cargar más leads →'
           )}
         </button>
       )}

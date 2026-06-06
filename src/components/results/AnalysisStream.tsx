@@ -15,7 +15,7 @@ export function AnalysisStream({ state }: Props) {
 
   if (phase === 'error') {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+      <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-4 text-rose-400 text-sm">
         {error ?? 'Ocurrió un error inesperado. Intenta de nuevo.'}
       </div>
     )
@@ -23,9 +23,9 @@ export function AnalysisStream({ state }: Props) {
 
   if (phase === 'loading') {
     return (
-      <div className="flex items-center gap-3 text-muted-foreground py-8">
+      <div className="flex items-center gap-3 text-muted-foreground py-12">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span>Obteniendo datos del mercado...</span>
+        <span className="text-sm">Obteniendo datos del mercado...</span>
       </div>
     )
   }
@@ -37,6 +37,27 @@ export function AnalysisStream({ state }: Props) {
           summary={summary}
           streaming={phase === 'streaming_summary'}
         />
+      )}
+
+      {phase === 'streaming_json' && (
+        <div className="space-y-6 animate-pulse">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-xl border bg-card p-5 h-28" />
+            <div className="rounded-xl border bg-card p-5 h-28" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-5 bg-muted rounded w-44" />
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-xl border bg-card p-5 h-20" />
+            ))}
+          </div>
+          <div className="space-y-3">
+            <div className="h-5 bg-muted rounded w-36" />
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-lg border bg-card p-4 h-10" />
+            ))}
+          </div>
+        </div>
       )}
 
       {result && (
@@ -51,14 +72,19 @@ export function AnalysisStream({ state }: Props) {
           <OpportunityList opportunities={result.opportunities} />
           <PainPoints painPoints={result.pain_points} />
           {result.zones.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-lg">Zonas de interés</h3>
-              {result.zones.map((zone, i) => (
-                <div key={`${zone.description}-${i}`} className="rounded-lg border bg-card p-4">
-                  <p className="font-medium text-sm mb-1">{zone.description}</p>
-                  <p className="text-sm text-muted-foreground">{zone.insight}</p>
-                </div>
-              ))}
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex items-baseline justify-between px-5 py-4 border-b border-border">
+                <h3 className="font-heading font-semibold text-sm">Zonas de interés</h3>
+                <span className="text-[10px] text-muted-foreground tabular-nums">{result.zones.length} zonas</span>
+              </div>
+              <div className="divide-y divide-border">
+                {result.zones.map((zone, i) => (
+                  <div key={`${zone.description}-${i}`} className="px-5 py-4 hover:bg-muted/30 transition-colors duration-150">
+                    <p className="font-medium text-sm mb-1">{zone.description}</p>
+                    <p className="text-sm text-muted-foreground">{zone.insight}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </>
