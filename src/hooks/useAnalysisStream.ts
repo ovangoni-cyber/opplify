@@ -22,8 +22,8 @@ export function useAnalysisStream() {
       const { data: sessionData } = await supabaseBrowser.auth.getSession()
       const token = sessionData.session?.access_token
 
-      // Record search in history (non-fatal)
-      if (sessionData.session?.user?.id) {
+      // Record search in history (non-fatal, skip for load-more requests)
+      if (sessionData.session?.user?.id && !params.exclude?.length) {
         Promise.resolve(supabaseBrowser.from('search_history').insert({
           city: params.city,
           business_type: params.business_type || null,

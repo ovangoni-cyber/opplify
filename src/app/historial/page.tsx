@@ -17,7 +17,7 @@ type HistoryEntry = {
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
+  const mins = Math.max(0, Math.floor(diff / 60000))
   if (mins < 60) return `hace ${mins} min`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `hace ${hrs}h`
@@ -47,6 +47,7 @@ export default function HistorialPage() {
   const { user, loading: authLoading } = useAuth()
   const [entries, setEntries] = useState<HistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -60,8 +61,9 @@ export default function HistorialPage() {
       .select('id, city, business_type, mode, created_at')
       .order('created_at', { ascending: false })
       .limit(50)
-      .then(({ data }) => {
-        setEntries(data ?? [])
+      .then(({ data, error }) => {
+        if (error) setLoadError(true)
+        else setEntries(data ?? [])
         setLoading(false)
       })
   }, [user, authLoading, router])
@@ -110,6 +112,10 @@ export default function HistorialPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-20">
+            <p className="text-sm text-muted-foreground">No se pudo cargar el historial. Intentá de nuevo.</p>
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-20 space-y-4">
