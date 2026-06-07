@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AgencyLeadCard } from './AgencyLeadCard'
+import { exportLeadsToCSV } from '@/lib/export-csv'
 import type { AgencyLead } from '@/types/analysis'
 
 const PAGE_SIZE = 10
@@ -10,19 +11,39 @@ type Props = {
   leads: AgencyLead[]
   onLoadMore?: () => void
   loadingMore?: boolean
+  city?: string
+  exportDate?: string
 }
 
-export function AgencyLeadsList({ leads, onLoadMore, loadingMore }: Props) {
+export function AgencyLeadsList({ leads, onLoadMore, loadingMore, city, exportDate }: Props) {
   const [showAll, setShowAll] = useState(false)
   const visible = showAll ? leads : leads.slice(0, PAGE_SIZE)
   const remaining = leads.length - PAGE_SIZE
 
+  const handleExport = () => {
+    const date = exportDate ?? new Date().toISOString().slice(0, 10)
+    const filename = city
+      ? `leads-${city.toLowerCase().replace(/\s+/g, '-')}-${date}.csv`
+      : 'leads.csv'
+    exportLeadsToCSV(leads, filename)
+  }
+
   return (
     <div className="space-y-4">
-      <h3 className="font-heading font-semibold text-base">
-        Leads detectados{' '}
-        <span className="text-muted-foreground font-normal text-sm">({leads.length})</span>
-      </h3>
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="font-heading font-semibold text-base">
+          Leads detectados{' '}
+          <span className="text-muted-foreground font-normal text-sm">({leads.length})</span>
+        </h3>
+        {leads.length > 0 && (
+          <button
+            onClick={handleExport}
+            className="text-xs font-medium text-primary hover:text-primary/80 border border-primary/30 hover:border-primary/60 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Exportar CSV →
+          </button>
+        )}
+      </div>
       {visible.map((lead, i) => (
         <div
           key={`${lead.business_name}-${i}`}

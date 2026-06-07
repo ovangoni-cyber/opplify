@@ -80,6 +80,7 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
           leads={[...accumulatedLeads].sort((a, b) => b.lead_score - a.lead_score)}
           onLoadMore={canLoadMore ? handleLoadMore : undefined}
           loadingMore={loadingMore}
+          city={city}
         />
       )}
       {loadMoreState.phase === 'error' && (
