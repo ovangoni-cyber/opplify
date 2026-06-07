@@ -108,6 +108,12 @@ function Header({
         </Link>
         <div className="flex items-center gap-3">
           <ThemeSwitcher />
+          <Link
+            href="/historial"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+          >
+            Historial
+          </Link>
           {businessType && (
             <span className="text-xs text-muted-foreground capitalize hidden sm:block">{businessType}</span>
           )}

@@ -91,6 +91,14 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
+            {user && (
+              <Link
+                href="/historial"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              >
+                Historial
+              </Link>
+            )}
             {user ? (
               <>
                 <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[160px]">{user.email}</span>
