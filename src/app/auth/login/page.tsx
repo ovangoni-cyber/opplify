@@ -96,8 +96,13 @@ export default function LoginPage() {
         setErrorMsg(error.message)
         setStatus('error')
       } else {
-        await supabaseBrowser.auth.signInWithPassword({ email, password })
-        router.replace(redirect)
+        const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email, password })
+        if (signInError) {
+          setErrorMsg('Cuenta creada. Iniciá sesión manualmente.')
+          setStatus('error')
+        } else {
+          router.replace(redirect)
+        }
       }
     }
   }
@@ -178,21 +183,31 @@ export default function LoginPage() {
 
           {tab === 'register' && (
             <>
-              <input
-                type="date"
-                value={dob}
-                onChange={e => setDob(e.target.value)}
-                required
-                className={INPUT_CLASS}
-              />
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                placeholder="Teléfono"
-                required
-                className={INPUT_CLASS}
-              />
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  Fecha de nacimiento
+                </label>
+                <input
+                  type="date"
+                  value={dob}
+                  onChange={e => setDob(e.target.value)}
+                  required
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="+34 600 000 000"
+                  required
+                  className={INPUT_CLASS}
+                />
+              </div>
               <select
                 value={country}
                 onChange={e => setCountry(e.target.value)}
