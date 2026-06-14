@@ -2,9 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-export type Theme = 'light' | 'dark'
+export type Theme = 'light' | 'dark' | 'hybrid'
 
-export const THEMES: Theme[] = ['light', 'dark']
+export const THEMES: Theme[] = ['light', 'dark', 'hybrid']
 export const STORAGE_KEY = 'theme'
 export const DEFAULT_THEME: Theme = 'light'
 

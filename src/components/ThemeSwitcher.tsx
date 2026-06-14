@@ -5,6 +5,7 @@ import { useTheme, type Theme } from './ThemeProvider'
 const OPTIONS: { value: Theme; label: string }[] = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' },
+  { value: 'hybrid', label: 'Mix' },
 ]
 
 export function ThemeSwitcher() {
