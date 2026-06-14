@@ -2,11 +2,28 @@ import type { NextRequest } from 'next/server'
 import { fetchAndNormalizePlaces } from '@/lib/google-places'
 import { streamAnalysis, JSON_DELIMITER } from '@/lib/claude'
 import { getCachedAnalysis, saveAnalysis } from '@/lib/analysis-cache'
+import { supabaseAdmin } from '@/lib/supabase'
 import type { SearchParams, AnalysisResult, AgencyLeadsResult, PlacesContext, AppMode } from '@/types/analysis'
 
 export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? ''
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'No autorizado' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   let body: SearchParams
   try {
     body = (await req.json()) as SearchParams
@@ -30,12 +47,24 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // Cache hits are free — return without deducting credits
   if (!hasExclusions) {
     const cached = await getCachedAnalysis(city, businessType, mode)
     if (cached) {
       const payload = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
       return new Response(payload, {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
+  }
+
+  // Deduct 1 credit for a fresh analysis (skipped for the test account)
+  if (user.id !== process.env.TEST_USER_ID) {
+    const { data: remaining } = await supabaseAdmin.rpc('decrement_credit', { p_user_id: user.id })
+    if (remaining === -1) {
+      return new Response(JSON.stringify({ error: 'Sin créditos' }), {
+        status: 402,
+        headers: { 'Content-Type': 'application/json' },
       })
     }
   }
