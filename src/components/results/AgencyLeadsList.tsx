@@ -50,7 +50,7 @@ export function AgencyLeadsList({ leads, onLoadMore, loadingMore, city, exportDa
           className="stagger-item"
           style={{ animationDelay: `${Math.min(i * 50, 400)}ms` }}
         >
-          <AgencyLeadCard lead={lead} />
+          <AgencyLeadCard lead={lead} city={city} />
         </div>
       ))}
       {!showAll && remaining > 0 && (
