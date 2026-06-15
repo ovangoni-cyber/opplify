@@ -132,7 +132,14 @@ function Header({
             ← Nueva búsqueda
           </Link>
           {email && (
-            <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[160px]">{email}</span>
+            <div className="flex items-center gap-2 border border-border rounded-full pl-1 pr-3 py-0.5">
+              <span className="h-5 w-5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
+                {email[0].toUpperCase()}
+              </span>
+              <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[140px]">
+                {email}
+              </span>
+            </div>
           )}
           <button
             onClick={onSignOut}
