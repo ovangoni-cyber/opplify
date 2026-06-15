@@ -43,26 +43,6 @@
   --border: #e2e8f0;
 }
 
-[data-theme="hybrid"] {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --primary: #38bdf8;
-  --primary-foreground: #0f172a;
-  --secondary: #1e293b;
-  --secondary-foreground: #94a3b8;
-  --destructive: #f87171;
-  --destructive-foreground: #0f172a;
-  --muted: #1e293b;
-  --muted-foreground: #475569;
-  --accent: #38bdf8;
-  --accent-foreground: #0f172a;
-  --input: #1e293b;
-  --ring: #38bdf8;
-  --border: #1e293b;
-}
-
 /* mirrors :root defaults — keep both in sync if :root values change */
 [data-theme="dark"] {
   --background: #06060f;
