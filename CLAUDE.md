@@ -28,10 +28,10 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 
 ## Architecture
 
-Single Next.js app. The entire analysis pipeline lives in one Edge Runtime API route — no microservices, no background workers.
+Single Next.js app. The analysis pipeline lives in one Node.js API route — no microservices, no background workers.
 
 ```
-Browser → POST /api/analyze (Edge Runtime)
+Browser → POST /api/analyze (Node.js runtime)
                ├─ 1. Auth check (Bearer token → Supabase)
                ├─ 2. Credit check (decrement_credit RPC) — skipped for TEST_USER_ID, skipped on cache hits
                ├─ 3. Cache check (Supabase, 24h TTL) — skipped when `exclude` is set
@@ -69,8 +69,11 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 
 | File | Responsibility |
 |------|---------------|
-| `src/app/api/analyze/route.ts` | Full pipeline orchestrator. Edge Runtime. Returns `ReadableStream`. Inserts to `search_history` before `writer.close()`. |
+| `src/app/api/analyze/route.ts` | Full pipeline orchestrator. Node.js runtime. Returns `ReadableStream`. Inserts to `search_history` before `writer.close()`. Deduplicates history inserts within 5-minute window. |
 | `src/app/api/pitch/route.ts` | Node runtime. Auth check + Claude call → `{subject, body}` for cold outreach emails. |
+| `src/app/api/checkout/route.ts` | Node runtime. Creates Stripe Checkout session for credit purchases. |
+| `src/app/api/stripe/webhook/route.ts` | Node runtime. Verifies Stripe signature, calls `add_credits` RPC on `checkout.session.completed`. |
+| `src/app/api/credits/route.ts` | Node runtime. Returns current credit balance for authenticated user. |
 | `src/lib/google-places.ts` | Fetches and normalizes Places API data. Pure helpers tested by unit tests. |
 | `src/lib/claude.ts` | Builds prompts (one per mode), streams Claude response, parses `---JSON---` section. Uses `max_tokens: 8192` — do not lower it. |
 | `src/lib/analysis-cache.ts` | 24h cache read/write via Supabase. Uses generated `cache_key` column. |
@@ -82,7 +85,8 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/hooks/useAnalysisStream.ts` | Client-side streaming state machine. Manages all `StreamPhase` transitions. |
 | `src/hooks/useAuth.ts` | Auth state hook. Returns `{ user, session, loading }` from Supabase. |
 | `src/components/ThemeProvider.tsx` | React context + `useTheme()` hook. Reads/writes `localStorage` key `'theme'`. |
-| `src/components/ThemeSwitcher.tsx` | Three pill buttons (Dark / Light / Mix) that call `setTheme()`. |
+| `src/components/ThemeSwitcher.tsx` | Two pill buttons (Dark / Light) that call `setTheme()`. |
+| `src/components/CreditsBadge.tsx` | Self-contained component that fetches and displays credit balance. Used in all navbars. |
 | `src/types/analysis.ts` | Single source of truth for all shared types (backend + frontend). |
 
 ### Auth & credits
@@ -97,14 +101,20 @@ The analyze route gates on two things before running the pipeline:
 
 **Critical:** Never import `src/lib/stripe.ts` from a client component — it throws in the browser because `STRIPE_SECRET_KEY` is undefined client-side.
 
-Payment routes (both Node runtime, not Edge):
+Payment routes (all Node runtime):
 - `POST /api/checkout` — verifies auth token, creates Stripe Checkout session
 - `POST /api/stripe/webhook` — verifies Stripe signature, calls `add_credits` RPC on `checkout.session.completed`
 - `GET /api/credits` — returns current credit balance for the authenticated user
 
+### Runtime constraints
+
+**All API routes must use Node.js runtime** (`export const runtime = 'nodejs'`). The Anthropic SDK and Supabase admin client use Node.js-specific modules (`node:crypto`, `node:stream`, etc.) that are incompatible with the Edge Runtime. Never add `export const runtime = 'edge'` to any route.
+
+Pages that use `useSearchParams()` must wrap the component in a `<Suspense>` boundary — required for Next.js static generation to work. See `src/app/auth/login/page.tsx` and `src/app/auth/callback/page.tsx` for the pattern.
+
 ### Theme system
 
-Three themes: `dark` (default dark, `#06060f` bg), `light` (white), `hybrid` (dark nav + white cards). Controlled via `data-theme` attribute on `<html>`. An inline `<script>` in `layout.tsx` reads `localStorage` before first paint to prevent flash.
+Two themes: `dark` (default, `#06060f` bg) and `light` (white). Controlled via `data-theme` attribute on `<html>`. An inline `<script>` in `layout.tsx` reads `localStorage` before first paint to prevent flash.
 
 All colors use CSS custom properties — never hardcode `text-cyan-400` or similar Tailwind color classes. Use `text-primary`, `bg-primary`, `border-primary`, etc. The exception is semantic colors that don't change with theme: `text-amber-400`, `text-rose-400` (used for mid/low scores).
 
@@ -114,7 +124,7 @@ Score/label color convention: `>=70 → text-primary`, `>=40 → text-amber-400`
 
 - `searchParams` in `src/app/results/page.tsx` is a `Promise` (Next.js 16 pattern) — always `await` it.
 - `supabaseAdmin` uses the **service role key** — never use client-side. Bypasses RLS.
-- `search_history` insert happens inside `.then(async (result) => { ... await writer.close() })` — BEFORE `writer.close()`, not after. This is intentional: Edge Runtime may cut off async work after the response is sent.
+- `search_history` insert happens inside `.then(async (result) => { ... await writer.close() })` — BEFORE `writer.close()`, not after. Deduplication checks for same user+city+mode+business_type within 5 minutes before inserting.
 - `saveAnalysis` (cache) runs fire-and-forget after `writer.close()` via a separate `streamPromise.then()`.
 - `let context!: PlacesContext` uses a definite assignment assertion — the try block always returns on error.
 - `useAnalysisStream` preserves streamed `summary` text through `streaming_json` → `complete` transition.
@@ -132,9 +142,17 @@ The API route, hooks, and UI components are not unit tested.
 
 ## Design system
 
-Three themes via CSS custom properties in `src/app/globals.css`. Theme blocks: `:root` (dark fallback), `[data-theme="light"]`, `[data-theme="dark"]`, `[data-theme="hybrid"]`.
+Two themes via CSS custom properties in `src/app/globals.css`. Theme blocks: `:root` (dark fallback), `[data-theme="light"]`, `[data-theme="dark"]`.
 
 Fonts via `next/font/google`: **Syne** (headings — `font-heading` class) + **DM Sans** (body — default sans).
+
+User email displays as a pill with avatar initial in all navbars. Credit balance displays via `<CreditsBadge />` which self-fetches from `/api/credits`.
+
+## Deployment
+
+Deployed on Vercel at `https://opplify-lfxu.vercel.app`. Branch: `master`. All API routes use Node.js runtime — do not switch to Edge.
+
+For local Stripe webhook testing: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 
 ## Environment variables
 
@@ -149,19 +167,19 @@ STRIPE_SECRET_KEY=          # stripe.com dashboard → Developers → API keys
 STRIPE_WEBHOOK_SECRET=      # stripe.com → Webhooks → signing secret (or `stripe listen` secret locally)
 STRIPE_PRICE_STARTER=       # Stripe Price ID for 5-credit pack (e.g. price_xxx)
 STRIPE_PRICE_PRO=           # Stripe Price ID for 20-credit pack
-NEXT_PUBLIC_SITE_URL=       # Full URL, e.g. https://yourdomain.com (http://localhost:3000 for dev)
+NEXT_PUBLIC_SITE_URL=       # Full URL, e.g. https://opplify-lfxu.vercel.app (http://localhost:3000 for dev)
 TEST_USER_ID=               # Supabase user UUID that bypasses credit check entirely
 ```
 
-DB migrations (apply in order via Supabase SQL editor or Management API):
+DB migrations (apply in order via Supabase SQL editor):
 - `supabase/migrations/0001_analyses.sql`
 - `supabase/migrations/0002_add_mode_column.sql`
 - `supabase/migrations/0003_credits.sql` — user_credits table, RPCs (decrement_credit, add_credits), new-user trigger
 - `supabase/migrations/0004_search_history.sql` — search_history table with RLS
 
-After applying migrations, run `NOTIFY pgrst, 'reload schema';` or use `SELECT pg_notify('pgrst', 'reload schema')` to refresh PostgREST's schema cache. On Supabase Cloud, use the Management API (`POST /v1/projects/{ref}/database/query` with a Personal Access Token) if the SQL editor NOTIFY doesn't propagate.
+After applying migrations, run `SELECT pg_notify('pgrst', 'reload schema')` to refresh PostgREST's schema cache.
 
-**Stripe setup:** Create two one-time products in Stripe (not subscriptions), copy the Price IDs into env vars. For local webhook testing: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
+**Stripe setup:** Create two one-time products in Stripe (not subscriptions), copy the Price IDs into env vars.
 
 ## Google Places API notes
 
