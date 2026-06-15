@@ -25,6 +25,7 @@ export function useAnalysisStream() {
       // Record search in history (non-fatal, skip for load-more requests)
       if (sessionData.session?.user?.id && !params.exclude?.length) {
         Promise.resolve(supabaseBrowser.from('search_history').insert({
+          user_id: sessionData.session.user.id,
           city: params.city,
           business_type: params.business_type || null,
           mode: params.mode,
