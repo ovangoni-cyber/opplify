@@ -22,7 +22,7 @@ export function SearchForm({ onSubmit, mode, loading }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
       <div className="space-y-1.5">
         <label htmlFor="city" className="text-sm font-medium">
           Ciudad <span className="text-red-500">*</span>
@@ -49,7 +49,7 @@ export function SearchForm({ onSubmit, mode, loading }: Props) {
           disabled={loading}
         />
       </div>
-      <Button type="submit" disabled={loading || !city.trim()} className="w-full">
+      <Button type="submit" disabled={loading || !city.trim()} className="btn-press w-full">
         {loading ? (
           <span className="flex items-center gap-2">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

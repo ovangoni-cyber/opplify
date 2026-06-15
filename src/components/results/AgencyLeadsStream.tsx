@@ -58,7 +58,7 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
 
   if (phase === 'error') {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+      <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-4 text-rose-400 text-sm">
         {error ?? 'Ocurrió un error inesperado. Intenta de nuevo.'}
       </div>
     )
@@ -66,9 +66,9 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
 
   if (phase === 'loading' || phase === 'streaming_summary' || phase === 'streaming_json') {
     return (
-      <div className="flex items-center gap-3 text-muted-foreground py-8">
+      <div className="flex items-center gap-3 text-muted-foreground py-12">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span>Analizando prospectos...</span>
+        <span className="text-sm">Analizando prospectos...</span>
       </div>
     )
   }
@@ -77,13 +77,14 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
     <div className="space-y-6">
       {accumulatedLeads.length > 0 && (
         <AgencyLeadsList
-          leads={accumulatedLeads}
+          leads={[...accumulatedLeads].sort((a, b) => b.lead_score - a.lead_score)}
           onLoadMore={canLoadMore ? handleLoadMore : undefined}
           loadingMore={loadingMore}
+          city={city}
         />
       )}
       {loadMoreState.phase === 'error' && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-700 text-sm">
+        <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-rose-400 text-sm">
           {loadMoreState.error ?? 'Error al cargar más leads. Intenta de nuevo.'}
         </div>
       )}

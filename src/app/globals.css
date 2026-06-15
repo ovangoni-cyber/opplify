@@ -1,22 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #06060f;
+  --foreground: #e2e8f0;
+  --card: #0c0c1e;
+  --card-foreground: #e2e8f0;
+  --primary: #22d3ee;
+  --primary-foreground: #020912;
+  --secondary: #111128;
+  --secondary-foreground: #94a3b8;
+  --destructive: #f87171;
+  --destructive-foreground: #06060f;
+  --muted: #111128;
+  --muted-foreground: #64748b;
+  --accent: #22d3ee;
+  --accent-foreground: #020912;
+  --input: #16162e;
+  --ring: #22d3ee;
+  --border: #1a1a35;
+
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart:  cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+[data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #171717;
-  --primary: #0ea5e9;
+  --card-foreground: #0f172a;
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
+  --secondary-foreground: #475569;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #0ea5e9;
+  --accent: #2563eb;
   --accent-foreground: #ffffff;
   --input: #e2e8f0;
-  --ring: #0ea5e9;
+  --ring: #2563eb;
+  --border: #e2e8f0;
+}
+
+[data-theme="hybrid"] {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --primary: #38bdf8;
+  --primary-foreground: #0f172a;
+  --secondary: #1e293b;
+  --secondary-foreground: #94a3b8;
+  --destructive: #f87171;
+  --destructive-foreground: #0f172a;
+  --muted: #1e293b;
+  --muted-foreground: #475569;
+  --accent: #38bdf8;
+  --accent-foreground: #0f172a;
+  --input: #1e293b;
+  --ring: #38bdf8;
+  --border: #1e293b;
+}
+
+/* mirrors :root defaults — keep both in sync if :root values change */
+[data-theme="dark"] {
+  --background: #06060f;
+  --foreground: #e2e8f0;
+  --card: #0c0c1e;
+  --card-foreground: #e2e8f0;
+  --primary: #22d3ee;
+  --primary-foreground: #020912;
+  --secondary: #111128;
+  --secondary-foreground: #94a3b8;
+  --destructive: #f87171;
+  --destructive-foreground: #06060f;
+  --muted: #111128;
+  --muted-foreground: #64748b;
+  --accent: #22d3ee;
+  --accent-foreground: #020912;
+  --input: #16162e;
+  --ring: #22d3ee;
+  --border: #1a1a35;
 }
 
 @theme inline {
@@ -36,33 +101,112 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-border: var(--border);
+  --font-sans:    var(--font-dm-sans);
+  --font-heading: var(--font-syne);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #0f0f0f;
-    --card-foreground: #ededed;
-    --primary: #0ea5e9;
-    --primary-foreground: #0c2540;
-    --secondary: #1e293b;
-    --secondary-foreground: #f1f5f9;
-    --destructive: #f87171;
-    --destructive-foreground: #0f0f0f;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --accent: #0ea5e9;
-    --accent-foreground: #0c2540;
-    --input: #27272a;
-    --ring: #0ea5e9;
-  }
-}
-
+/* ── Base ── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-optical-sizing: auto;
+}
+
+.font-heading {
+  font-family: var(--font-syne), system-ui, sans-serif;
+}
+
+/* Balance headings — browsers pick better break points */
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+/* Breathing room on prose */
+p {
+  text-wrap: pretty;
+}
+
+/* ── Backgrounds ── */
+.home-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--primary) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 3%, transparent) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+.section-divider {
+  border-top: 1px solid var(--border);
+}
+
+/* ── Section eyebrow label ── */
+.label-eyebrow {
+  font-size: 0.625rem;         /* 10px */
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted-foreground);
+}
+
+/* ── Entrance animations ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.65s var(--ease-out-expo) both;
+}
+.animate-fade-in {
+  animation: fade-in 0.5s var(--ease-out-quart) both;
+}
+
+.animate-delay-1 { animation-delay: 80ms;  }
+.animate-delay-2 { animation-delay: 160ms; }
+.animate-delay-3 { animation-delay: 240ms; }
+.animate-delay-4 { animation-delay: 320ms; }
+
+/* ── Button press (Emil Kowalski) ── */
+.btn-press {
+  transition: transform 140ms var(--ease-out-expo);
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ── Card hover ── */
+.card-lift {
+  transition:
+    border-color 180ms var(--ease-out-quart),
+    box-shadow   180ms var(--ease-out-quart),
+    transform    180ms var(--ease-out-quart);
+}
+.card-lift:hover {
+  border-color: color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ── Stagger list ── */
+.stagger-item {
+  opacity: 0;
+  animation: fade-up 0.5s var(--ease-out-expo) both;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .stagger-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .btn-press  { transition: none; }
+  .card-lift  { transition: none; }
+  .card-lift:hover { transform: none; }
 }

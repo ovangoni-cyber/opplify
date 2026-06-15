@@ -30,11 +30,11 @@ function buildPrompt(
   const topPainPoints = context.businesses
     .filter((b) => b.rating > 0 && b.rating < 3.5 && b.recent_reviews.length > 0)
     .flatMap((b) => b.recent_reviews.map((r) => `[${b.name}]: ${r}`))
-    .slice(0, 15)
+    .slice(0, 8)
     .join('\n')
 
   const businessSummary = context.businesses
-    .slice(0, 40)
+    .slice(0, 20)
     .map(
       (b) =>
         `- ${b.name} | ${b.rating > 0 ? b.rating + '★' : 'sin rating'} (${b.review_count} reseñas) | ${b.address}`
@@ -54,7 +54,7 @@ ${topPainPoints || 'Sin reseñas disponibles de negocios con bajo rating.'}
 INSTRUCCIONES:
 1. Escribe un resumen ejecutivo en español de 3-4 párrafos. Sé específico: menciona negocios reales, patrones concretos y recomendaciones accionables.
 2. Escribe exactamente esta línea: ${JSON_DELIMITER}
-3. Escribe el JSON estructurado siguiendo este schema exacto:
+3. Escribe el JSON estructurado siguiendo este schema exacto (máx. 5 opportunities, 5 pain_points, 3 zones):
 
 {
   "market": {
@@ -88,7 +88,7 @@ INSTRUCCIONES:
   ],
   "opportunity_score": <0-100>,
   "opportunity_label": "string descriptivo del nivel de oportunidad",
-  "executive_summary": "mismo texto del resumen ejecutivo anterior",
+  "executive_summary": "resumen en 1-2 frases",
   "generated_at": "${new Date().toISOString()}",
   "model_used": "${MODEL}"
 }`

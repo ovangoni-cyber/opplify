@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import type { StreamState, SearchParams, AnalysisResult } from '@/types/analysis'
+import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const JSON_DELIMITER = '---JSON---'
 const CACHED_MARKER = '---CACHED---'
@@ -18,15 +19,35 @@ export function useAnalysisStream() {
     setState({ phase: 'loading', summary: '', result: null, error: null })
 
     try {
+      const { data: sessionData } = await supabaseBrowser.auth.getSession()
+      const token = sessionData.session?.access_token
+
       const res = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(params),
       })
 
       if (!res.ok) {
-        const err = await res.json()
-        setState((s) => ({ ...s, phase: 'error', error: err.error ?? 'Error desconocido' }))
+        if (res.status === 401) {
+          setState((s) => ({ ...s, phase: 'error', error: 'ERR_UNAUTHENTICATED' }))
+          return
+        }
+        if (res.status === 402) {
+          setState((s) => ({ ...s, phase: 'error', error: 'ERR_NO_CREDITS' }))
+          return
+        }
+        let errorMessage = `Error del servidor (${res.status})`
+        try {
+          const err = await res.json()
+          errorMessage = err.error ?? errorMessage
+        } catch {
+          // response body is HTML (Next.js error page), not JSON
+        }
+        setState((s) => ({ ...s, phase: 'error', error: errorMessage }))
         return
       }
 
@@ -89,12 +110,12 @@ export function useAnalysisStream() {
           const match = buffer.trim().match(/\{[\s\S]*\}/)
           if (!match) throw new Error('No JSON object')
           const result: AnalysisResult = JSON.parse(match[0])
-          setState({
+          setState((s) => ({
             phase: 'complete',
-            summary: result.executive_summary,
+            summary: s.summary || result.executive_summary,
             result,
             error: null,
-          })
+          }))
         } catch {
           setState((s) => ({
             ...s,
