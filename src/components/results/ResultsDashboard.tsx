@@ -57,7 +57,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
   if (state.phase === 'error' && state.error === 'ERR_NO_CREDITS') {
     return (
       <div className="min-h-screen">
-        <Header city={city} businessType={businessType} credits={credits} onSignOut={handleSignOut} />
+        <Header city={city} businessType={businessType} credits={credits} email={user?.email} onSignOut={handleSignOut} />
         <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sin créditos</p>
           <h2 className="font-heading text-2xl font-bold">No tienes créditos disponibles</h2>
@@ -77,7 +77,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
 
   return (
     <div className="min-h-screen">
-      <Header city={city} businessType={businessType} credits={credits} onSignOut={handleSignOut} />
+      <Header city={city} businessType={businessType} credits={credits} email={user?.email} onSignOut={handleSignOut} />
       <div className="max-w-4xl mx-auto px-6 py-10">
         {mode === 'agency_leads' ? (
           <AgencyLeadsStream state={state} city={city} businessType={businessType} />
@@ -93,11 +93,13 @@ function Header({
   city,
   businessType,
   credits,
+  email,
   onSignOut,
 }: {
   city: string
   businessType: string
   credits: number | null
+  email: string | undefined
   onSignOut: () => void
 }) {
   return (
@@ -129,6 +131,9 @@ function Header({
           >
             ← Nueva búsqueda
           </Link>
+          {email && (
+            <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[160px]">{email}</span>
+          )}
           <button
             onClick={onSignOut}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"

@@ -96,6 +96,9 @@ export default function HistorialPage() {
             <Link href="/buscar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Nueva búsqueda
             </Link>
+            {user?.email && (
+              <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[160px]">{user.email}</span>
+            )}
             <button
               onClick={handleSignOut}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
