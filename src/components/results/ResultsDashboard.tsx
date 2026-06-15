@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAnalysisStream } from '@/hooks/useAnalysisStream'
@@ -9,6 +9,7 @@ import { supabaseBrowser } from '@/lib/supabase-browser'
 import { AnalysisStream } from './AnalysisStream'
 import { AgencyLeadsStream } from './AgencyLeadsStream'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { CreditsBadge } from '@/components/CreditsBadge'
 import type { AppMode } from '@/types/analysis'
 
 type Props = {
@@ -20,8 +21,7 @@ type Props = {
 export function ResultsDashboard({ city, businessType, mode }: Props) {
   const router = useRouter()
   const { state, analyze } = useAnalysisStream()
-  const { user, session, loading: authLoading } = useAuth()
-  const [credits, setCredits] = useState<number | null>(null)
+  const { user, loading: authLoading } = useAuth()
 
   // Redirect if not authenticated once auth resolves
   useEffect(() => {
@@ -37,17 +37,6 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city, businessType, mode, user, authLoading])
 
-  // Fetch credit balance on mount (refresh after analysis completes)
-  useEffect(() => {
-    if (!session?.access_token) return
-    fetch('/api/credits', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-      .then(r => r.json())
-      .then(d => setCredits(d.credits))
-      .catch(() => {})
-  }, [session, state.phase])
-
   const handleSignOut = async () => {
     await supabaseBrowser.auth.signOut()
     router.push('/')
@@ -57,7 +46,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
   if (state.phase === 'error' && state.error === 'ERR_NO_CREDITS') {
     return (
       <div className="min-h-screen">
-        <Header city={city} businessType={businessType} credits={credits} email={user?.email} onSignOut={handleSignOut} />
+        <Header city={city} businessType={businessType} email={user?.email} onSignOut={handleSignOut} />
         <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sin créditos</p>
           <h2 className="font-heading text-2xl font-bold">No tienes créditos disponibles</h2>
@@ -77,7 +66,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
 
   return (
     <div className="min-h-screen">
-      <Header city={city} businessType={businessType} credits={credits} email={user?.email} onSignOut={handleSignOut} />
+      <Header city={city} businessType={businessType} email={user?.email} onSignOut={handleSignOut} />
       <div className="max-w-4xl mx-auto px-6 py-10">
         {mode === 'agency_leads' ? (
           <AgencyLeadsStream state={state} city={city} businessType={businessType} />
@@ -92,13 +81,11 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
 function Header({
   city,
   businessType,
-  credits,
   email,
   onSignOut,
 }: {
   city: string
   businessType: string
-  credits: number | null
   email: string | undefined
   onSignOut: () => void
 }) {
@@ -120,11 +107,7 @@ function Header({
             <span className="text-xs text-muted-foreground capitalize hidden sm:block">{businessType}</span>
           )}
           <span className="font-heading font-semibold text-sm">{city}</span>
-          {credits !== null && (
-            <span className="text-xs tabular-nums text-muted-foreground border border-border px-2 py-0.5 rounded">
-              {credits} {credits === 1 ? 'crédito' : 'créditos'}
-            </span>
-          )}
+          <CreditsBadge />
           <Link
             href="/"
             className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"

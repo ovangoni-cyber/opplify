@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import { CreditsBadge } from '@/components/CreditsBadge'
 import { useAuth } from '@/hooks/useAuth'
 
 type HistoryEntry = {
@@ -96,6 +97,7 @@ export default function HistorialPage() {
             <Link href="/buscar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Nueva búsqueda
             </Link>
+            <CreditsBadge />
             {user?.email && (
               <div className="flex items-center gap-2 border border-border rounded-full pl-1 pr-3 py-0.5">
                 <span className="h-5 w-5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
