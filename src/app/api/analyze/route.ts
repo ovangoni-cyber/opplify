@@ -5,7 +5,6 @@ import { getCachedAnalysis, saveAnalysis } from '@/lib/analysis-cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import type { SearchParams, AnalysisResult, AgencyLeadsResult, PlacesContext, AppMode } from '@/types/analysis'
 
-export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
   // Auth check
