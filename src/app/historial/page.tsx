@@ -63,10 +63,16 @@ export default function HistorialPage() {
         .order('created_at', { ascending: false })
         .limit(50)
     ).then(({ data, error }) => {
-      if (error) setLoadError(true)
-      else setEntries(data ?? [])
+      if (error) {
+        console.error('[historial] error:', JSON.stringify(error))
+        setLoadError(true)
+      } else {
+        console.log('[historial] loaded', data?.length, 'entries for user', user?.id)
+        setEntries(data ?? [])
+      }
       setLoading(false)
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('[historial] catch:', err)
       setLoadError(true)
       setLoading(false)
     })

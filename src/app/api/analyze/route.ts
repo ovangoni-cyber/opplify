@@ -119,9 +119,24 @@ export async function POST(req: NextRequest) {
     .then(async (result) => {
       analysisResult = result
       if (result && !hasExclusions) {
-        await supabaseAdmin
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+        const dupQuery = supabaseAdmin
           .from('search_history')
-          .insert({ user_id: user.id, city, business_type: businessType, mode })
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('city', city)
+          .eq('mode', mode)
+          .gte('created_at', fiveMinutesAgo)
+        const { data: existing } = businessType
+          ? await dupQuery.eq('business_type', businessType).limit(1)
+          : await dupQuery.is('business_type', null).limit(1)
+        if (!existing || existing.length === 0) {
+          const { error: histErr } = await supabaseAdmin
+            .from('search_history')
+            .insert({ user_id: user.id, city, business_type: businessType, mode })
+          if (histErr) console.error('[history] insert failed:', JSON.stringify(histErr))
+          else console.log('[history] inserted for user', user.id)
+        }
       }
       await writer.close()
     })
