@@ -104,7 +104,7 @@ function Header({
     <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/" className="font-heading font-bold text-sm tracking-tight hover:text-primary transition-colors">
-          opportunity<span className="text-primary">.</span>ai
+          Opplify<span className="text-primary">.</span>ai
         </Link>
         <div className="flex items-center gap-3">
           <ThemeSwitcher />
