@@ -21,7 +21,7 @@ export default function BuscarPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6">
         <Link href="/" className="block font-heading font-bold text-base tracking-tight">
-          oportunity<span className="text-primary">.</span>ai
+          opportunity<span className="text-primary">.</span>ai
         </Link>
         <div>
           <h1 className="font-heading font-bold text-2xl tracking-tight mb-1" style={{ letterSpacing: '-0.02em' }}>

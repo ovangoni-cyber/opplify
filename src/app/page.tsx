@@ -87,7 +87,7 @@ export default function HomePage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <span className="font-heading font-bold text-base tracking-tight">
-            oportunity<span className="text-primary">.</span>ai
+            opportunity<span className="text-primary">.</span>ai
           </span>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
@@ -353,7 +353,7 @@ export default function HomePage() {
       <footer className="section-divider py-12 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <span className="font-heading font-bold text-sm tracking-tight">
-            oportunity<span className="text-primary">.</span>ai
+            opportunity<span className="text-primary">.</span>ai
           </span>
           <p className="text-xs text-muted-foreground">
             Google Places · Claude AI · {new Date().getFullYear()}

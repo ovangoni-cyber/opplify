@@ -116,7 +116,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12">
       <div className="w-full max-w-sm">
         <Link href="/" className="block font-heading font-bold text-base tracking-tight mb-12">
-          oportunity<span className="text-primary">.</span>ai
+          opportunity<span className="text-primary">.</span>ai
         </Link>
 
         {/* Tab toggle */}

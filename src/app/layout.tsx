@@ -16,7 +16,7 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'oportunity.ai',
+  title: 'opportunity.ai',
   description: 'Detecta oportunidades de negocio locales con IA',
 }
 
