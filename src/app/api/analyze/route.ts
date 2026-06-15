@@ -1,4 +1,7 @@
 import type { NextRequest } from 'next/server'
+
+export const runtime = 'nodejs'
+
 import { fetchAndNormalizePlaces } from '@/lib/google-places'
 import { streamAnalysis, JSON_DELIMITER } from '@/lib/claude'
 import { getCachedAnalysis, saveAnalysis } from '@/lib/analysis-cache'
