@@ -140,6 +140,12 @@ export async function POST(req: NextRequest) {
         context.avg_rating,
         mode
       ).catch((err) => console.error('Cache save failed:', err))
+
+      void Promise.resolve(
+        supabaseAdmin
+          .from('search_history')
+          .insert({ user_id: user.id, city, business_type: businessType, mode })
+      ).catch((err: unknown) => console.error('History save failed:', err))
     }
   })
 

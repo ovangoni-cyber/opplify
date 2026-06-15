@@ -56,20 +56,20 @@ export default function HistorialPage() {
       return
     }
 
-    supabaseBrowser
-      .from('search_history')
-      .select('id, city, business_type, mode, created_at')
-      .order('created_at', { ascending: false })
-      .limit(50)
-      .then(({ data, error }) => {
-        if (error) setLoadError(true)
-        else setEntries(data ?? [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoadError(true)
-        setLoading(false)
-      })
+    Promise.resolve(
+      supabaseBrowser
+        .from('search_history')
+        .select('id, city, business_type, mode, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50)
+    ).then(({ data, error }) => {
+      if (error) setLoadError(true)
+      else setEntries(data ?? [])
+      setLoading(false)
+    }).catch(() => {
+      setLoadError(true)
+      setLoading(false)
+    })
   }, [user, authLoading, router])
 
   const handleSignOut = async () => {
