@@ -1,8 +1,6 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseBrowser } from '@/lib/supabase-browser'
@@ -46,7 +44,7 @@ const COUNTRIES = [
 const INPUT_CLASS =
   'w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors'
 
-export default function LoginPage() {
+function LoginInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const redirect = searchParams.get('redirect') || '/buscar'
@@ -258,5 +256,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <LoginInner />
+    </Suspense>
   )
 }
