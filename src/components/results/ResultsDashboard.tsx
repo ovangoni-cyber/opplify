@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAnalysisStream } from '@/hooks/useAnalysisStream'
 import { useAuth } from '@/hooks/useAuth'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 import { AnalysisStream } from './AnalysisStream'
 import { AgencyLeadsStream } from './AgencyLeadsStream'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
@@ -38,7 +38,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
   }, [city, businessType, mode, user, authLoading])
 
   const handleSignOut = async () => {
-    await supabaseBrowser.auth.signOut()
+    await authClient.signOut()
     router.push('/')
   }
 
