@@ -5,12 +5,20 @@ export const runtime = 'nodejs'
 import { fetchAndNormalizePlaces } from '@/lib/google-places'
 import { streamAnalysis, JSON_DELIMITER } from '@/lib/claude'
 import { getCachedAnalysis, saveAnalysis } from '@/lib/analysis-cache'
-import { supabaseAdmin } from '@/lib/supabase'
+import { pool } from '@/lib/db'
+import { verifyToken } from '@/lib/auth-server'
 import type { SearchParams, AnalysisResult, AgencyLeadsResult, PlacesContext, AppMode } from '@/types/analysis'
 
+async function decrementCredit(userId: string): Promise<number> {
+  const { rows } = await pool.query(
+    `UPDATE user_credits SET credits = credits - 1, updated_at = now()
+     WHERE user_id = $1 AND credits > 0 RETURNING credits`,
+    [userId]
+  )
+  return rows[0]?.credits ?? -1
+}
 
 export async function POST(req: NextRequest) {
-  // Auth check
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? ''
   if (!token) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), {
@@ -18,8 +26,8 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     })
   }
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-  if (authError || !user) {
+  const payload = verifyToken(token)
+  if (!payload) {
     return new Response(JSON.stringify({ error: 'No autorizado' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -49,20 +57,18 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Cache hits are free — return without deducting credits
   if (!hasExclusions) {
     const cached = await getCachedAnalysis(city, businessType, mode)
     if (cached) {
-      const payload = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
-      return new Response(payload, {
+      const payload2 = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
+      return new Response(payload2, {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       })
     }
   }
 
-  // Deduct 1 credit for a fresh analysis (skipped for the test account)
-  if (user.id !== process.env.TEST_USER_ID) {
-    const { data: remaining } = await supabaseAdmin.rpc('decrement_credit', { p_user_id: user.id })
+  if (payload.sub !== process.env.TEST_USER_ID) {
+    const remaining = await decrementCredit(payload.sub)
     if (remaining === -1) {
       return new Response(JSON.stringify({ error: 'Sin créditos' }), {
         status: 402,
@@ -87,11 +93,7 @@ export async function POST(req: NextRequest) {
       const filteredBusinesses = context.businesses.filter(
         (b) => !excludeSet.has(b.name.toLowerCase())
       )
-      context = {
-        ...context,
-        businesses: filteredBusinesses,
-        total_count: filteredBusinesses.length,
-      }
+      context = { ...context, businesses: filteredBusinesses, total_count: filteredBusinesses.length }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error de Google Places'
@@ -107,9 +109,7 @@ export async function POST(req: NextRequest) {
 
   if (context.total_count < 5) {
     await writer.write(
-      encoder.encode(
-        '[NOTA: Se encontraron pocos negocios para esta búsqueda. El análisis puede ser limitado.]\n\n'
-      )
+      encoder.encode('[NOTA: Se encontraron pocos negocios para esta búsqueda. El análisis puede ser limitado.]\n\n')
     )
   }
 
@@ -122,22 +122,20 @@ export async function POST(req: NextRequest) {
       analysisResult = result
       if (result && !hasExclusions) {
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-        const dupQuery = supabaseAdmin
-          .from('search_history')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('city', city)
-          .eq('mode', mode)
-          .gte('created_at', fiveMinutesAgo)
-        const { data: existing } = businessType
-          ? await dupQuery.eq('business_type', businessType).limit(1)
-          : await dupQuery.is('business_type', null).limit(1)
-        if (!existing || existing.length === 0) {
-          const { error: histErr } = await supabaseAdmin
-            .from('search_history')
-            .insert({ user_id: user.id, city, business_type: businessType, mode })
-          if (histErr) console.error('[history] insert failed:', JSON.stringify(histErr))
-          else console.log('[history] inserted for user', user.id)
+        const dupResult = await pool.query(
+          `SELECT id FROM search_history WHERE user_id = $1 AND city = $2 AND mode = $3 AND created_at >= $4 AND ${
+            businessType ? 'business_type = $5' : 'business_type IS NULL'
+          } LIMIT 1`,
+          businessType
+            ? [payload.sub, city, mode, fiveMinutesAgo, businessType]
+            : [payload.sub, city, mode, fiveMinutesAgo]
+        )
+        if (dupResult.rows.length === 0) {
+          await pool.query(
+            'INSERT INTO search_history (user_id, city, business_type, mode) VALUES ($1, $2, $3, $4)',
+            [payload.sub, city, businessType, mode]
+          ).catch((err) => console.error('[history] insert failed:', err))
+          console.log('[history] inserted for user', payload.sub)
         }
       }
       await writer.close()
@@ -154,14 +152,8 @@ export async function POST(req: NextRequest) {
 
   streamPromise.then(() => {
     if (analysisResult && !hasExclusions) {
-      void saveAnalysis(
-        city,
-        businessType,
-        analysisResult,
-        context.total_count,
-        context.avg_rating,
-        mode
-      ).catch((err) => console.error('Cache save failed:', err))
+      void saveAnalysis(city, businessType, analysisResult, context.total_count, context.avg_rating, mode)
+        .catch((err) => console.error('Cache save failed:', err))
     }
   })
 
