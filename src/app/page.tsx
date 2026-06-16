@@ -8,7 +8,7 @@ import { ModeToggle } from '@/components/search/ModeToggle'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
 import { useAuth } from '@/hooks/useAuth'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 import { CREDIT_PACKS } from '@/lib/credit-packs'
 import type { SearchParams, AppMode } from '@/types/analysis'
 
@@ -112,7 +112,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => supabaseBrowser.auth.signOut().then(() => router.refresh())}
+                  onClick={() => authClient.signOut().then(() => router.refresh())}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Salir

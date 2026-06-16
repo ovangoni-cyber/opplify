@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 import type { AgencyLead, AgencyService } from '@/types/analysis'
 
 const SERVICE_LABEL: Record<AgencyService, string> = {
@@ -50,7 +50,7 @@ export function AgencyLeadCard({ lead, city = '' }: Props) {
     setPitchState('loading')
     setPitchError('')
     try {
-      const { data: sessionData } = await supabaseBrowser.auth.getSession()
+      const { data: sessionData } = await authClient.getSession()
       const token = sessionData.session?.access_token
       const res = await fetch('/api/pitch', {
         method: 'POST',
