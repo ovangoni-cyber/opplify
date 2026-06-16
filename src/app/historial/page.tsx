@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
 import { useAuth } from '@/hooks/useAuth'
@@ -57,20 +57,16 @@ export default function HistorialPage() {
       return
     }
 
-    Promise.resolve(
-      supabaseBrowser
-        .from('search_history')
-        .select('id, city, business_type, mode, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50)
-    ).then(({ data, error }) => {
-      if (error) {
-        console.error('[historial] error:', JSON.stringify(error))
-        setLoadError(true)
-      } else {
-        console.log('[historial] loaded', data?.length, 'entries for user', user?.id)
-        setEntries(data ?? [])
-      }
+    authClient.getSession().then(({ data: sessionData }) => {
+      const token = sessionData.session?.access_token
+      return fetch('/api/history', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+    }).then(async (res) => {
+      if (!res.ok) throw new Error('fetch failed')
+      const data: HistoryEntry[] = await res.json()
+      console.log('[historial] loaded', data.length, 'entries for user', user?.id)
+      setEntries(data)
       setLoading(false)
     }).catch((err) => {
       console.error('[historial] catch:', err)
@@ -80,7 +76,7 @@ export default function HistorialPage() {
   }, [user, authLoading, router])
 
   const handleSignOut = async () => {
-    await supabaseBrowser.auth.signOut()
+    await authClient.signOut()
     router.push('/')
   }
 
