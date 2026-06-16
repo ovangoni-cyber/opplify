@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 
 const COUNTRIES = [
   { value: 'AR', label: 'Argentina' },
@@ -71,7 +71,7 @@ function LoginInner() {
     setErrorMsg('')
 
     if (tab === 'login') {
-      const { error } = await supabaseBrowser.auth.signInWithPassword({ email, password })
+      const { error } = await authClient.signInWithPassword({ email, password })
       if (error) {
         setErrorMsg('Email o contraseña incorrectos')
         setStatus('error')
@@ -79,7 +79,7 @@ function LoginInner() {
         router.replace(redirect)
       }
     } else {
-      const { error } = await supabaseBrowser.auth.signUp({
+      const { error } = await authClient.signUp({
         email,
         password,
         options: {
@@ -96,7 +96,7 @@ function LoginInner() {
         setErrorMsg(error.message)
         setStatus('error')
       } else {
-        const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email, password })
+        const { error: signInError } = await authClient.signInWithPassword({ email, password })
         if (signInError) {
           setErrorMsg('Cuenta creada. Iniciá sesión manualmente.')
           setStatus('error')
