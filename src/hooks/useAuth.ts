@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { User, Session } from '@supabase/supabase-js'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient, type AuthUser, type AuthSession } from '@/lib/auth-client'
 
 export type AuthState = {
-  user: User | null
-  session: Session | null
+  user: AuthUser | null
+  session: AuthSession | null
   loading: boolean
 }
 
@@ -14,11 +13,15 @@ export function useAuth(): AuthState {
   const [state, setState] = useState<AuthState>({ user: null, session: null, loading: true })
 
   useEffect(() => {
-    supabaseBrowser.auth.getSession().then(({ data }) => {
-      setState({ user: data.session?.user ?? null, session: data.session, loading: false })
+    authClient.getSession().then(({ data }) => {
+      setState({
+        user: data.session?.user ?? null,
+        session: data.session,
+        loading: false,
+      })
     })
 
-    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = authClient.onAuthStateChange((_, session) => {
       setState({ user: session?.user ?? null, session, loading: false })
     })
 
