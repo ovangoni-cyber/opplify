@@ -1,9 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('../supabase', () => ({
-  supabaseAdmin: {
-    from: vi.fn(),
-  },
+vi.mock('../db', () => ({
+  pool: { query: vi.fn() },
 }))
 
 import { buildCacheKey } from '../analysis-cache'

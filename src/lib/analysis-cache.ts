@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { pool } from './db'
 import type { AnalysisResult, AgencyLeadsResult, AppMode } from '@/types/analysis'
 
 const CACHE_TTL_HOURS = 24
@@ -20,18 +20,11 @@ export async function getCachedAnalysis(
   const cacheKey = buildCacheKey(city, businessType)
   const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString()
 
-  const { data, error } = await supabaseAdmin
-    .from('analyses')
-    .select('result, created_at')
-    .eq('cache_key', cacheKey)
-    .eq('mode', mode)
-    .gt('created_at', cutoff)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
-
-  if (error || !data) return null
-  return data as CachedAnalysis
+  const { rows } = await pool.query(
+    'SELECT result, created_at FROM analyses WHERE cache_key = $1 AND mode = $2 AND created_at > $3 ORDER BY created_at DESC LIMIT 1',
+    [cacheKey, mode, cutoff]
+  )
+  return rows[0] ?? null
 }
 
 export async function saveAnalysis(
@@ -42,13 +35,8 @@ export async function saveAnalysis(
   avgRating: number,
   mode: AppMode
 ): Promise<void> {
-  const { error } = await supabaseAdmin.from('analyses').insert({
-    city,
-    business_type: businessType,
-    result,
-    businesses_count: businessesCount,
-    avg_rating: avgRating,
-    mode,
-  })
-  if (error) throw error
+  await pool.query(
+    'INSERT INTO analyses (city, business_type, result, businesses_count, avg_rating, mode) VALUES ($1, $2, $3, $4, $5, $6)',
+    [city, businessType, JSON.stringify(result), businessesCount, avgRating, mode]
+  )
 }
