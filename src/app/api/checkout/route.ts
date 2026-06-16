@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { verifyToken } from '@/lib/auth-server'
 import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe'
 import { CREDIT_PACKS } from '@/lib/credit-packs'
 
@@ -7,10 +7,8 @@ export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? ''
-  if (!token) return Response.json({ error: 'No autorizado' }, { status: 401 })
-
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-  if (authError || !user) return Response.json({ error: 'No autorizado' }, { status: 401 })
+  const payload = verifyToken(token)
+  if (!payload) return Response.json({ error: 'No autorizado' }, { status: 401 })
 
   let packId: string
   try {
@@ -35,13 +33,12 @@ export async function POST(req: NextRequest) {
       success_url: `${siteUrl}/?credits_added=1`,
       cancel_url: `${siteUrl}/#precios`,
       metadata: {
-        user_id: user.id,
+        user_id: payload.sub,
         pack_id: pack.id,
         credits: String(pack.credits),
       },
-      client_reference_id: user.id,
+      client_reference_id: payload.sub,
     })
-
     return Response.json({ url: session.url })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Error al crear sesión de pago'

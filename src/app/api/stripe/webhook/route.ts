@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { supabaseAdmin } from '@/lib/supabase'
+import { pool } from '@/lib/db'
 
 export const runtime = 'nodejs'
 
@@ -27,7 +27,11 @@ export async function POST(req: NextRequest) {
     if (userId && creditsStr) {
       const credits = parseInt(creditsStr, 10)
       if (!isNaN(credits) && credits > 0) {
-        await supabaseAdmin.rpc('add_credits', { p_user_id: userId, p_amount: credits })
+        await pool.query(
+          `INSERT INTO user_credits (user_id, credits, updated_at) VALUES ($1, $2, now())
+           ON CONFLICT (user_id) DO UPDATE SET credits = user_credits.credits + $2, updated_at = now()`,
+          [userId, credits]
+        )
       }
     }
   }

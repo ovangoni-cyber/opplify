@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { supabaseAdmin } from '@/lib/supabase'
+import { verifyToken } from '@/lib/auth-server'
 import type { AgencyLead, AgencyService } from '@/types/analysis'
 
 export const runtime = 'nodejs'
@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-  if (authError || !user) {
+  const payload = verifyToken(token)
+  if (!payload) {
     return Response.json({ error: 'No autorizado' }, { status: 401 })
   }
 
