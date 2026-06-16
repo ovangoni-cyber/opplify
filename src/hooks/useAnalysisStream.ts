@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import type { StreamState, SearchParams, AnalysisResult } from '@/types/analysis'
-import { supabaseBrowser } from '@/lib/supabase-browser'
+import { authClient } from '@/lib/auth-client'
 
 const JSON_DELIMITER = '---JSON---'
 const CACHED_MARKER = '---CACHED---'
@@ -19,7 +19,7 @@ export function useAnalysisStream() {
     setState({ phase: 'loading', summary: '', result: null, error: null })
 
     try {
-      const { data: sessionData } = await supabaseBrowser.auth.getSession()
+      const { data: sessionData } = await authClient.getSession()
       const token = sessionData.session?.access_token
 
       const res = await fetch('/api/analyze', {
