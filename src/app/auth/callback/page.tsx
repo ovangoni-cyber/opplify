@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabaseBrowser } from '@/lib/supabase-browser'
 
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -19,20 +18,7 @@ function CallbackInner() {
 
   useEffect(() => {
     const redirect = searchParams.get('redirect') || '/buscar'
-
-    supabaseBrowser.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        router.replace(redirect)
-        return
-      }
-
-      const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_IN') {
-          subscription.unsubscribe()
-          router.replace(redirect)
-        }
-      })
-    })
+    router.replace(redirect)
   }, [router, searchParams])
 
   return <Spinner />
