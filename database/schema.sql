@@ -42,3 +42,11 @@ CREATE TABLE search_history (
 );
 
 CREATE INDEX idx_search_history_user ON search_history (user_id, created_at DESC);
+
+CREATE TABLE user_branding (
+  user_id     uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  agency_name text,
+  logo_data   bytea,
+  logo_mime   text,
+  updated_at  timestamptz DEFAULT now()
+);
