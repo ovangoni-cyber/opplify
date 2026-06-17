@@ -150,11 +150,11 @@ User email displays as a pill with avatar initial in all navbars. Credit balance
 
 ## Database
 
-Local PostgreSQL. Schema lives in `database/schema.sql`. Tables: `users`, `analyses`, `user_credits`, `search_history`.
+PostgreSQL — local Postgres for dev, Vercel Postgres (Neon-backed) for production. Same schema in both, no ORM, no migration runner: `database/schema.sql` is the source of truth, but changes to an already-running database (local or prod) are applied by hand with `psql` against `$DATABASE_URL`. Tables: `users`, `analyses`, `user_credits`, `search_history`, `user_branding`.
 
 The `analyses` table has a `cache_key` generated column (`lower(city) || ':' || lower(coalesce(business_type, '_all_'))`). Never set `cache_key` on insert — the DB computes it.
 
-To add credits manually during development:
+To add credits manually:
 ```sql
 INSERT INTO user_credits (user_id, credits) VALUES ('<uuid>', 99999)
 ON CONFLICT (user_id) DO UPDATE SET credits = user_credits.credits + 99999;
@@ -164,13 +164,17 @@ ON CONFLICT (user_id) DO UPDATE SET credits = user_credits.credits + 99999;
 
 Deployed on Vercel at `https://opplify-lfxu.vercel.app`. Branch: `master`. All API routes use Node.js runtime — do not switch to Edge.
 
+**No `vercel.json`.** Runtime is set per-route via `export const runtime = 'nodejs'` — that's the only correct way to configure it in this app. A `vercel.json` `functions` override with `"runtime": "nodejs20.x"` previously broke every deploy with "Function Runtimes must have a valid version" — don't re-add one.
+
+Production database is Vercel Postgres (Neon). `DATABASE_URL` and `JWT_SECRET` are set as Vercel project env vars (Production/Preview/Development) — not the same Postgres instance as local dev, so data doesn't carry over between the two. Auth accounts (and credits) are separate per environment.
+
 For local Stripe webhook testing: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 
 ## Environment variables
 
 Required in `.env.local`:
 ```
-DATABASE_URL=               # postgresql://postgres:PASSWORD@localhost:5432/opplify
+DATABASE_URL=               # local: postgresql://postgres:PASSWORD@localhost:5432/opplify — prod (Vercel): the Neon connection string from Storage tab
 JWT_SECRET=                 # long random string (min 32 chars)
 GOOGLE_PLACES_API_KEY=      # Google Cloud, Places API (New) enabled
 ANTHROPIC_API_KEY=          # console.anthropic.com
