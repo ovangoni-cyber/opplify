@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/supabase-js": "^2.106.1",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
