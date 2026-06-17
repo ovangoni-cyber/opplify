@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 BACKUP_DIR=/opt/opplify/backups
 mkdir -p "$BACKUP_DIR"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
