@@ -84,7 +84,7 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/lib/google-places.ts` | Fetches and normalizes Places API data. Pure helpers tested by unit tests. |
 | `src/lib/claude.ts` | Builds prompts (one per mode), streams Claude response, parses `---JSON---` section. Uses `max_tokens: 8192` — do not lower it. |
 | `src/lib/analysis-cache.ts` | 24h cache read/write via local Postgres. Uses generated `cache_key` column. |
-| `src/lib/stripe.ts` | Stripe SDK — **server-only**. Never import from client components or `'use client'` files. |
+| `src/lib/stripe.ts` | Stripe SDK — **server-only**. Never import from client components or `'use client'` files. Exports `getStripe()`, not a top-level client — the client must be constructed lazily (on first call, not at module load) so importing this module doesn't require `STRIPE_SECRET_KEY` at build time, which breaks the Docker build (`next build` collects page data for `/api/stripe/webhook` at build time, with no env vars present in the builder stage). |
 | `src/lib/credit-packs.ts` | Client-safe pack definitions (name, price, credits). No Stripe import. Use in client components instead of `stripe.ts`. |
 | `src/lib/export-csv.ts` | Converts `AgencyLead[]` to downloadable CSV. Pure function, no network calls. |
 | `src/hooks/useAnalysisStream.ts` | Client-side streaming state machine. Manages all `StreamPhase` transitions. |
@@ -150,7 +150,7 @@ User email displays as a pill with avatar initial in all navbars. Credit balance
 
 ## Database
 
-PostgreSQL — local Postgres for dev, Vercel Postgres (Neon-backed) for production. Same schema in both, no ORM, no migration runner: `database/schema.sql` is the source of truth, but changes to an already-running database (local or prod) are applied by hand with `psql` against `$DATABASE_URL`. Tables: `users`, `analyses`, `user_credits`, `search_history`, `user_branding`.
+PostgreSQL — local Postgres for dev, a Postgres 16 Docker container (the `db` service in `docker-compose.yml`) on the production VPS. Same schema in both, no ORM, no migration runner: `database/schema.sql` is the source of truth, but changes to an already-running database (local or prod) are applied by hand with `psql` against `$DATABASE_URL` (locally) or via `docker compose exec -T db psql -U opplify -d opplify` (on the VPS). Tables: `users`, `analyses`, `user_credits`, `search_history`, `user_branding`.
 
 The `analyses` table has a `cache_key` generated column (`lower(city) || ':' || lower(coalesce(business_type, '_all_'))`). Never set `cache_key` on insert — the DB computes it.
 
@@ -162,19 +162,28 @@ ON CONFLICT (user_id) DO UPDATE SET credits = user_credits.credits + 99999;
 
 ## Deployment
 
-Deployed on Vercel at `https://opplify-lfxu.vercel.app`. Branch: `master`. All API routes use Node.js runtime — do not switch to Edge.
+Self-hosted on a VPS (Hostealo, Madrid) at `http://78.40.111.107` — no domain or HTTPS yet (deferred until a domain is pointed at the server). **No longer on Vercel** — the Vercel project and its Neon Postgres database have been deleted.
 
-**No `vercel.json`.** Runtime is set per-route via `export const runtime = 'nodejs'` — that's the only correct way to configure it in this app. A `vercel.json` `functions` override with `"runtime": "nodejs20.x"` previously broke every deploy with "Function Runtimes must have a valid version" — don't re-add one.
+**Stack:** Docker Compose, three services on one `docker-compose.yml` at `/opt/opplify` on the server:
+- `app` — the Next.js app, built from the repo's `Dockerfile` (multi-stage, `node:20-alpine`, `npm run build` then `npm run start`), reachable only inside the Compose network on port 3000.
+- `db` — `postgres:16`, data in the named volume `pgdata`, reachable only inside the Compose network on port 5432.
+- `nginx` — `nginx:alpine`, the only service with a published port (`80:80`), reverse-proxies everything to `app:3000` (config in `nginx.conf`).
 
-Production database is Vercel Postgres (Neon). `DATABASE_URL` and `JWT_SECRET` are set as Vercel project env vars (Production/Preview/Development) — not the same Postgres instance as local dev, so data doesn't carry over between the two. Auth accounts (and credits) are separate per environment.
+`app` and `db` both load secrets from `.env.production` on the server (never committed — same shape as `.env.local`, but `DATABASE_URL` uses the Compose service name `db` as host, not `localhost`, and three extra vars — `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — initialize the Postgres container on first run).
+
+**Deploy:** SSH in (`ssh -i ~/.ssh/opplify_vps root@78.40.111.107`) and run `/opt/opplify/deploy.sh`, which does `git pull origin master && docker compose up -d --build`. Manual, no CI/CD. **Note:** the GitHub repo's default branch is `feat/theme-system`, not `master` — a fresh `git clone` lands on the wrong branch; always `git checkout master` (or `git pull origin master` as `deploy.sh` does) explicitly.
+
+**Backups:** `scripts/backup-db.sh` runs daily via cron at 03:00 server time (`pg_dump` → gzip → `/opt/opplify/backups/`, 7-day local retention, logged to `backups/cron.log`). Not copied off-server — local disk only, by design for now.
+
+**Rollback:** `git checkout <previous-commit> && docker compose up -d --build` rebuilds from a known-good commit. Postgres data is untouched (lives in the `pgdata` volume, independent of the `app` container's lifecycle).
 
 For local Stripe webhook testing: `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 
 ## Environment variables
 
-Required in `.env.local`:
+Required in `.env.local` (dev) / `.env.production` (VPS, not committed):
 ```
-DATABASE_URL=               # local: postgresql://postgres:PASSWORD@localhost:5432/opplify — prod (Vercel): the Neon connection string from Storage tab
+DATABASE_URL=               # local: postgresql://postgres:PASSWORD@localhost:5432/opplify — VPS: postgresql://opplify:PASSWORD@db:5432/opplify (Compose service name as host)
 JWT_SECRET=                 # long random string (min 32 chars)
 GOOGLE_PLACES_API_KEY=      # Google Cloud, Places API (New) enabled
 ANTHROPIC_API_KEY=          # console.anthropic.com
@@ -182,9 +191,11 @@ STRIPE_SECRET_KEY=          # stripe.com dashboard → Developers → API keys
 STRIPE_WEBHOOK_SECRET=      # stripe.com → Webhooks → signing secret (or `stripe listen` secret locally)
 STRIPE_PRICE_STARTER=       # Stripe Price ID for 5-credit pack (e.g. price_xxx)
 STRIPE_PRICE_PRO=           # Stripe Price ID for 20-credit pack
-NEXT_PUBLIC_SITE_URL=       # Full URL, e.g. https://opplify-lfxu.vercel.app (http://localhost:3000 for dev)
+NEXT_PUBLIC_SITE_URL=       # Full URL, e.g. http://78.40.111.107 (http://localhost:3000 for dev)
 TEST_USER_ID=               # Postgres user UUID that bypasses credit check entirely
 ```
+
+On the VPS, `.env.production` additionally sets `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (all `opplify`/`opplify`/a generated password) — these initialize the `db` container and must match the user/password/db in `DATABASE_URL` exactly.
 
 **Stripe setup:** Create two one-time products in Stripe (not subscriptions), copy the Price IDs into env vars.
 
