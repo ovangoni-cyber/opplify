@@ -93,12 +93,20 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
             {user && (
-              <Link
-                href="/historial"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
-              >
-                Historial
-              </Link>
+              <>
+                <Link
+                  href="/ajustes"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+                >
+                  Ajustes
+                </Link>
+                <Link
+                  href="/historial"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+                >
+                  Historial
+                </Link>
+              </>
             )}
             {user ? (
               <>
