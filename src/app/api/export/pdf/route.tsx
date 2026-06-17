@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       )
 
     const buffer = await renderToBuffer(document)
-    const slug = city.toLowerCase().replace(/\s+/g, '-')
+    const slug = city.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
     return new Response(new Uint8Array(buffer), {
       headers: {
