@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { pool } from '@/lib/db'
 
 export const runtime = 'nodejs'
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, secret)
+    event = getStripe().webhooks.constructEvent(rawBody, sig, secret)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Firma inválida'
     return Response.json({ error: message }, { status: 400 })
