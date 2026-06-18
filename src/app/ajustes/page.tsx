@@ -7,6 +7,7 @@ import { authClient } from '@/lib/auth-client'
 import { useAuth } from '@/hooks/useAuth'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
+import { NavMenu } from '@/components/NavMenu'
 
 const INPUT_CLASS =
   'w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors'
@@ -105,10 +106,8 @@ export default function AjustesPage() {
           </Link>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <Link href="/historial" className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              Historial
-            </Link>
             <CreditsBadge />
+            <NavMenu />
           </div>
         </div>
       </div>
