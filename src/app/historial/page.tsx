@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
+import { NavMenu } from '@/components/NavMenu'
 import { useAuth } from '@/hooks/useAuth'
 
 type HistoryEntry = {
@@ -75,11 +76,6 @@ export default function HistorialPage() {
     })
   }, [user, authLoading, router])
 
-  const handleSignOut = async () => {
-    await authClient.signOut()
-    router.push('/')
-  }
-
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -90,9 +86,6 @@ export default function HistorialPage() {
           </Link>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <Link href="/ajustes" className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              Ajustes
-            </Link>
             <Link href="/buscar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Nueva búsqueda
             </Link>
@@ -107,12 +100,7 @@ export default function HistorialPage() {
                 </span>
               </div>
             )}
-            <button
-              onClick={handleSignOut}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Salir
-            </button>
+            <NavMenu />
           </div>
         </div>
       </div>
