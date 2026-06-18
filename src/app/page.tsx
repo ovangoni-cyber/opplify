@@ -7,8 +7,8 @@ import { SearchForm } from '@/components/search/SearchForm'
 import { ModeToggle } from '@/components/search/ModeToggle'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
+import { NavMenu } from '@/components/NavMenu'
 import { useAuth } from '@/hooks/useAuth'
-import { authClient } from '@/lib/auth-client'
 import { CREDIT_PACKS } from '@/lib/credit-packs'
 import type { SearchParams, AppMode } from '@/types/analysis'
 
@@ -92,22 +92,6 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            {user && (
-              <>
-                <Link
-                  href="/ajustes"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
-                >
-                  Ajustes
-                </Link>
-                <Link
-                  href="/historial"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
-                >
-                  Historial
-                </Link>
-              </>
-            )}
             {user ? (
               <>
                 <CreditsBadge />
@@ -119,12 +103,7 @@ export default function HomePage() {
                     {user.email}
                   </span>
                 </div>
-                <button
-                  onClick={() => authClient.signOut().then(() => router.refresh())}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Salir
-                </button>
+                <NavMenu />
               </>
             ) : (
               <a
