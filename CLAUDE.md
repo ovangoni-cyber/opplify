@@ -78,12 +78,20 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/app/api/auth/login/route.ts` | Node runtime. Email + password → JWT. |
 | `src/app/api/auth/register/route.ts` | Node runtime. Creates user in local Postgres + gives 1 initial credit. |
 | `src/app/api/history/route.ts` | Node runtime. Returns search_history for authenticated user. |
+| `src/app/api/branding/route.ts` | Node runtime. `GET` returns `{ agency_name, logo }` (logo as a data URL) for the authenticated user; `POST` upserts both, fully replacing the row each time — never a partial update. |
+| `src/app/api/export/pdf/route.tsx` | Node runtime. `.tsx` extension because it renders JSX. Validates the client-echoed `result` via `validateResultForMode`, looks up `user_branding` (falls back to a generic Opplify.ai header if no row exists), picks one of two `@react-pdf/renderer` templates by `mode`, returns the PDF binary via `renderToBuffer`. |
 | `src/lib/db.ts` | `pg` Pool singleton. All server-side DB access goes through this. |
 | `src/lib/auth-server.ts` | `verifyToken` / `signToken` — server-only, uses `jsonwebtoken`. |
 | `src/lib/auth-client.ts` | Browser auth utilities. Stores JWT in `localStorage`. Exposes `authClient` with `getSession`, `signInWithPassword`, `signUp`, `signOut`, `onAuthStateChange`. |
 | `src/lib/google-places.ts` | Fetches and normalizes Places API data. Pure helpers tested by unit tests. |
 | `src/lib/claude.ts` | Builds prompts (one per mode), streams Claude response, parses `---JSON---` section. Uses `max_tokens: 8192` — do not lower it. |
 | `src/lib/analysis-cache.ts` | 24h cache read/write via local Postgres. Uses generated `cache_key` column. |
+| `src/lib/branding.ts` | `validateLogo` (size/type checks) and `buildLogoDataUrl` for the `user_branding` table — agency name + logo shown on exported PDFs. |
+| `src/lib/download-pdf.ts` | Client-side helper that calls `/api/export/pdf` and triggers a browser download of the returned binary. |
+| `src/lib/pdf/colors.ts` | `PDF_COLORS` — fixed color palette for PDF templates (independent of the app's CSS-custom-property theme system, since `@react-pdf/renderer` can't read CSS vars). |
+| `src/lib/pdf/validate-result.ts` | `validateResultForMode` — guards against rendering a PDF from a malformed/mismatched `AnalysisResult`/`AgencyLeadsResult` before it reaches a template. |
+| `src/lib/pdf/market-research-template.tsx` | `MarketResearchPdf` — `@react-pdf/renderer` document for `market_research` mode. |
+| `src/lib/pdf/agency-leads-template.tsx` | `AgencyLeadsPdf` — `@react-pdf/renderer` document for `agency_leads` mode. |
 | `src/lib/stripe.ts` | Stripe SDK — **server-only**. Never import from client components or `'use client'` files. Exports `getStripe()`, not a top-level client — the client must be constructed lazily (on first call, not at module load) so importing this module doesn't require `STRIPE_SECRET_KEY` at build time, which breaks the Docker build (`next build` collects page data for `/api/stripe/webhook` at build time, with no env vars present in the builder stage). |
 | `src/lib/credit-packs.ts` | Client-safe pack definitions (name, price, credits). No Stripe import. Use in client components instead of `stripe.ts`. |
 | `src/lib/export-csv.ts` | Converts `AgencyLead[]` to downloadable CSV. Pure function, no network calls. |
@@ -138,6 +146,8 @@ Unit tests cover only **pure functions** with no network calls:
 - `claude.ts`: `parseAnalysisJson`, `parseAgencyLeadsJson`
 - `analysis-cache.ts`: `buildCacheKey` (mocks the `pg` pool)
 - `export-csv.ts`: `exportLeadsToCSV`
+- `branding.ts`: `validateLogo`
+- `pdf/validate-result.ts`: `validateResultForMode`
 
 The API routes, hooks, and UI components are not unit tested.
 
