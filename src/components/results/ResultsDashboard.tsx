@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAnalysisStream } from '@/hooks/useAnalysisStream'
 import { useAuth } from '@/hooks/useAuth'
-import { authClient } from '@/lib/auth-client'
 import { AnalysisStream } from './AnalysisStream'
 import { AgencyLeadsStream } from './AgencyLeadsStream'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { CreditsBadge } from '@/components/CreditsBadge'
+import { NavMenu } from '@/components/NavMenu'
 import type { AppMode } from '@/types/analysis'
 
 type Props = {
@@ -37,16 +37,11 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city, businessType, mode, user, authLoading])
 
-  const handleSignOut = async () => {
-    await authClient.signOut()
-    router.push('/')
-  }
-
   // Special error: no credits
   if (state.phase === 'error' && state.error === 'ERR_NO_CREDITS') {
     return (
       <div className="min-h-screen">
-        <Header city={city} businessType={businessType} email={user?.email} onSignOut={handleSignOut} />
+        <Header city={city} businessType={businessType} email={user?.email} />
         <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sin créditos</p>
           <h2 className="font-heading text-2xl font-bold">No tienes créditos disponibles</h2>
@@ -66,7 +61,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
 
   return (
     <div className="min-h-screen">
-      <Header city={city} businessType={businessType} email={user?.email} onSignOut={handleSignOut} />
+      <Header city={city} businessType={businessType} email={user?.email} />
       <div className="max-w-4xl mx-auto px-6 py-10">
         {mode === 'agency_leads' ? (
           <AgencyLeadsStream state={state} city={city} businessType={businessType} />
@@ -82,12 +77,10 @@ function Header({
   city,
   businessType,
   email,
-  onSignOut,
 }: {
   city: string
   businessType: string
   email: string | undefined
-  onSignOut: () => void
 }) {
   return (
     <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
@@ -97,18 +90,6 @@ function Header({
         </Link>
         <div className="flex items-center gap-3">
           <ThemeSwitcher />
-          <Link
-            href="/ajustes"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
-          >
-            Ajustes
-          </Link>
-          <Link
-            href="/historial"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
-          >
-            Historial
-          </Link>
           {businessType && (
             <span className="text-xs text-muted-foreground capitalize hidden sm:block">{businessType}</span>
           )}
@@ -130,12 +111,7 @@ function Header({
               </span>
             </div>
           )}
-          <button
-            onClick={onSignOut}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Salir
-          </button>
+          <NavMenu />
         </div>
       </div>
     </div>
