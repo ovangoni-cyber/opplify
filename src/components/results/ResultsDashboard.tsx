@@ -71,7 +71,7 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
         {mode === 'agency_leads' ? (
           <AgencyLeadsStream state={state} city={city} businessType={businessType} />
         ) : (
-          <AnalysisStream state={state} />
+          <AnalysisStream state={state} city={city} businessType={businessType} />
         )}
       </div>
     </div>

@@ -1,15 +1,36 @@
+'use client'
+
+import { useState } from 'react'
 import { ExecutiveSummary } from './ExecutiveSummary'
 import { OpportunityScore } from './OpportunityScore'
 import { MarketSaturation } from './MarketSaturation'
 import { OpportunityList } from './OpportunityList'
 import { PainPoints } from './PainPoints'
+import { authClient } from '@/lib/auth-client'
+import { downloadPdf } from '@/lib/download-pdf'
 import type { StreamState, AnalysisResult } from '@/types/analysis'
 
-type Props = { state: StreamState }
+type Props = { state: StreamState; city: string; businessType: string }
 
-export function AnalysisStream({ state }: Props) {
+export function AnalysisStream({ state, city, businessType }: Props) {
   const { phase, summary, result: rawResult, error } = state
   const result = rawResult as AnalysisResult | null
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
+
+  const handleExportPdf = async () => {
+    if (!result) return
+    setExporting(true)
+    setExportError('')
+    const { data: sessionData } = await authClient.getSession()
+    const token = sessionData.session?.access_token
+    const { error: err } = await downloadPdf(
+      { mode: 'market_research', city, business_type: businessType || null, result },
+      token
+    )
+    if (err) setExportError(err)
+    setExporting(false)
+  }
 
   if (phase === 'idle') return null
 
@@ -32,6 +53,18 @@ export function AnalysisStream({ state }: Props) {
 
   return (
     <div className="space-y-6">
+      {phase === 'complete' && result && (
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={handleExportPdf}
+            disabled={exporting}
+            className="text-xs font-medium text-primary hover:text-primary/80 border border-primary/30 hover:border-primary/60 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+          >
+            {exporting ? 'Generando...' : 'Exportar PDF →'}
+          </button>
+        </div>
+      )}
+      {exportError && <p className="text-xs text-rose-400">{exportError}</p>}
       {summary && (
         <ExecutiveSummary
           summary={summary}
