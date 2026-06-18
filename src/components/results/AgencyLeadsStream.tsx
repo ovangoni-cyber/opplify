@@ -81,6 +81,7 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
           onLoadMore={canLoadMore ? handleLoadMore : undefined}
           loadingMore={loadingMore}
           city={city}
+          businessType={businessType}
         />
       )}
       {loadMoreState.phase === 'error' && (
