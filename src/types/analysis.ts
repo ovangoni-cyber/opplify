@@ -90,6 +90,7 @@ export type SearchParams = {
   business_type: string
   mode: AppMode
   exclude?: string[]
+  from_history?: boolean
 }
 
 // Internal type — never sent to the client
