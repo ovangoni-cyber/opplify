@@ -7,9 +7,8 @@ import { useAnalysisStream } from '@/hooks/useAnalysisStream'
 import { useAuth } from '@/hooks/useAuth'
 import { AnalysisStream } from './AnalysisStream'
 import { AgencyLeadsStream } from './AgencyLeadsStream'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import { CreditsBadge } from '@/components/CreditsBadge'
-import { NavMenu } from '@/components/NavMenu'
+import { AppHeader } from '@/components/AppHeader'
+import { AppFooter } from '@/components/AppFooter'
 import type { AppMode } from '@/types/analysis'
 
 type Props = {
@@ -41,7 +40,9 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
   if (state.phase === 'error' && state.error === 'ERR_NO_CREDITS') {
     return (
       <div className="min-h-screen">
-        <Header city={city} businessType={businessType} email={user?.email} />
+        <AppHeader>
+          <ResultsHeaderInfo city={city} businessType={businessType} />
+        </AppHeader>
         <div className="max-w-4xl mx-auto px-6 py-20 text-center space-y-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sin créditos</p>
           <h2 className="font-heading text-2xl font-bold">No tienes créditos disponibles</h2>
@@ -55,13 +56,16 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
             Ver precios →
           </Link>
         </div>
+        <AppFooter />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen">
-      <Header city={city} businessType={businessType} email={user?.email} />
+      <AppHeader>
+        <ResultsHeaderInfo city={city} businessType={businessType} />
+      </AppHeader>
       <div className="max-w-4xl mx-auto px-6 py-10">
         {mode === 'agency_leads' ? (
           <AgencyLeadsStream state={state} city={city} businessType={businessType} />
@@ -69,51 +73,30 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
           <AnalysisStream state={state} city={city} businessType={businessType} />
         )}
       </div>
+      <AppFooter />
     </div>
   )
 }
 
-function Header({
+function ResultsHeaderInfo({
   city,
   businessType,
-  email,
 }: {
   city: string
   businessType: string
-  email: string | undefined
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
-      <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="font-heading font-bold text-sm tracking-tight hover:text-primary transition-colors">
-          Opplify<span className="text-primary">.</span>ai
-        </Link>
-        <div className="flex items-center gap-3">
-          <ThemeSwitcher />
-          {businessType && (
-            <span className="text-xs text-muted-foreground capitalize hidden sm:block">{businessType}</span>
-          )}
-          <span className="font-heading font-semibold text-sm">{city}</span>
-          <CreditsBadge />
-          <Link
-            href="/"
-            className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-          >
-            ← Nueva búsqueda
-          </Link>
-          {email && (
-            <div className="flex items-center gap-2 border border-border rounded-full pl-1 pr-3 py-0.5">
-              <span className="h-5 w-5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
-                {email[0].toUpperCase()}
-              </span>
-              <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[140px]">
-                {email}
-              </span>
-            </div>
-          )}
-          <NavMenu />
-        </div>
-      </div>
-    </div>
+    <>
+      {businessType && (
+        <span className="text-xs text-muted-foreground capitalize hidden sm:block">{businessType}</span>
+      )}
+      <span className="font-heading font-semibold text-sm">{city}</span>
+      <Link
+        href="/"
+        className="text-xs px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+      >
+        ← Nueva búsqueda
+      </Link>
+    </>
   )
 }
