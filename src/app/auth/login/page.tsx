@@ -4,42 +4,7 @@ import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
-
-const COUNTRIES = [
-  { value: 'AR', label: 'Argentina' },
-  { value: 'BO', label: 'Bolivia' },
-  { value: 'BR', label: 'Brasil' },
-  { value: 'CA', label: 'Canadá' },
-  { value: 'CL', label: 'Chile' },
-  { value: 'CO', label: 'Colombia' },
-  { value: 'CR', label: 'Costa Rica' },
-  { value: 'CU', label: 'Cuba' },
-  { value: 'DO', label: 'República Dominicana' },
-  { value: 'EC', label: 'Ecuador' },
-  { value: 'SV', label: 'El Salvador' },
-  { value: 'ES', label: 'España' },
-  { value: 'US', label: 'Estados Unidos' },
-  { value: 'GT', label: 'Guatemala' },
-  { value: 'HN', label: 'Honduras' },
-  { value: 'MX', label: 'México' },
-  { value: 'NI', label: 'Nicaragua' },
-  { value: 'PA', label: 'Panamá' },
-  { value: 'PY', label: 'Paraguay' },
-  { value: 'PE', label: 'Perú' },
-  { value: 'PT', label: 'Portugal' },
-  { value: 'PR', label: 'Puerto Rico' },
-  { value: 'UY', label: 'Uruguay' },
-  { value: 'VE', label: 'Venezuela' },
-  { value: 'DE', label: 'Alemania' },
-  { value: 'FR', label: 'Francia' },
-  { value: 'GB', label: 'Reino Unido' },
-  { value: 'IT', label: 'Italia' },
-  { value: 'NL', label: 'Países Bajos' },
-  { value: 'CH', label: 'Suiza' },
-  { value: 'AU', label: 'Australia' },
-  { value: 'JP', label: 'Japón' },
-  { value: 'OTHER', label: 'Otro' },
-]
+import { COUNTRIES } from '@/lib/countries'
 
 const INPUT_CLASS =
   'w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors'
