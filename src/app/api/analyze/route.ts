@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
   const mode: AppMode = body.mode === 'agency_leads' ? 'agency_leads' : 'market_research'
   const exclude: string[] = Array.isArray(body.exclude) ? body.exclude : []
   const hasExclusions = exclude.length > 0
+  const fromHistory = body.from_history === true
 
   if (!city) {
     return new Response(JSON.stringify({ error: 'Ciudad requerida' }), {
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!hasExclusions) {
-    const cached = await getCachedAnalysis(city, businessType, mode)
+    const cached = await getCachedAnalysis(city, businessType, mode, fromHistory)
     if (cached) {
       const payload2 = `---CACHED---\n${JSON_DELIMITER}\n${JSON.stringify(cached.result)}`
       return new Response(payload2, {
