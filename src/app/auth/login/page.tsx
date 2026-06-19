@@ -169,6 +169,10 @@ function LoginInner() {
             placeholder="Email"
             required
             autoFocus={tab === 'login'}
+            autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={INPUT_CLASS}
           />
           <input
@@ -178,6 +182,10 @@ function LoginInner() {
             placeholder="Contraseña"
             required
             minLength={6}
+            autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className={INPUT_CLASS}
           />
 
