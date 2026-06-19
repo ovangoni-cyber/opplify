@@ -78,7 +78,8 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/app/api/auth/login/route.ts` | Node runtime. Email + password → JWT. |
 | `src/app/api/auth/register/route.ts` | Node runtime. Creates user in local Postgres + gives 1 initial credit. |
 | `src/app/api/history/route.ts` | Node runtime. Returns search_history for authenticated user. |
-| `src/app/api/branding/route.ts` | Node runtime. `GET` returns `{ agency_name, logo }` (logo as a data URL) for the authenticated user; `POST` upserts both, fully replacing the row each time — never a partial update. |
+| `src/app/api/branding/route.ts` | Node runtime. `GET` returns `{ agency_name, logo }` (logo as a data URL) for the authenticated user; `POST` upserts both, fully replacing the row each time — never a partial update. Edited from the same "Mis datos" card on `/ajustes` as `/api/profile`. |
+| `src/app/api/profile/route.ts` | Node runtime. `GET` returns the registration profile fields (`first_name`/`last_name`/`dob`/`phone`/`country`) read from `users.metadata`, defaulting missing keys to `''`. `POST` updates those fields and, if `new_password` is present, verifies `current_password` via `bcrypt.compare` and updates `password_hash` — both writes happen in one transaction, so a wrong current password rolls back the profile-field update too. |
 | `src/app/api/export/pdf/route.tsx` | Node runtime. `.tsx` extension because it renders JSX. Validates the client-echoed `result` via `validateResultForMode`, looks up `user_branding` (falls back to a generic Opplify.ai header if no row exists), picks one of two `@react-pdf/renderer` templates by `mode`, returns the PDF binary via `renderToBuffer`. |
 | `src/lib/db.ts` | `pg` Pool singleton. All server-side DB access goes through this. |
 | `src/lib/auth-server.ts` | `verifyToken` / `signToken` — server-only, uses `jsonwebtoken`. |
@@ -94,6 +95,7 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/lib/pdf/agency-leads-template.tsx` | `AgencyLeadsPdf` — `@react-pdf/renderer` document for `agency_leads` mode. |
 | `src/lib/stripe.ts` | Stripe SDK — **server-only**. Never import from client components or `'use client'` files. Exports `getStripe()`, not a top-level client — the client must be constructed lazily (on first call, not at module load) so importing this module doesn't require `STRIPE_SECRET_KEY` at build time, which breaks the Docker build (`next build` collects page data for `/api/stripe/webhook` at build time, with no env vars present in the builder stage). |
 | `src/lib/credit-packs.ts` | Client-safe pack definitions (name, price, credits). No Stripe import. Use in client components instead of `stripe.ts`. |
+| `src/lib/countries.ts` | `COUNTRIES` — shared 32-entry country list used by both the registration form (`auth/login/page.tsx`) and the profile editor (`ajustes/page.tsx`). |
 | `src/lib/export-csv.ts` | Converts `AgencyLead[]` to downloadable CSV. Pure function, no network calls. |
 | `src/hooks/useAnalysisStream.ts` | Client-side streaming state machine. Manages all `StreamPhase` transitions. |
 | `src/hooks/useAuth.ts` | Auth state hook. Returns `{ user, session, loading }` using `authClient`. |
