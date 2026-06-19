@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import { CreditsBadge } from '@/components/CreditsBadge'
-import { NavMenu } from '@/components/NavMenu'
+import { AppHeader } from '@/components/AppHeader'
+import { AppFooter } from '@/components/AppFooter'
 import { useAuth } from '@/hooks/useAuth'
 
 type HistoryEntry = {
@@ -78,32 +77,11 @@ export default function HistorialPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="font-heading font-bold text-sm tracking-tight hover:text-primary transition-colors">
-            Opplify<span className="text-primary">.</span>ai
-          </Link>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <Link href="/buscar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Nueva búsqueda
-            </Link>
-            <CreditsBadge />
-            {user?.email && (
-              <div className="flex items-center gap-2 border border-border rounded-full pl-1 pr-3 py-0.5">
-                <span className="h-5 w-5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
-                  {user.email[0].toUpperCase()}
-                </span>
-                <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[140px]">
-                  {user.email}
-                </span>
-              </div>
-            )}
-            <NavMenu />
-          </div>
-        </div>
-      </div>
+      <AppHeader>
+        <Link href="/buscar" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          Nueva búsqueda
+        </Link>
+      </AppHeader>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-6 py-10">
@@ -165,6 +143,7 @@ export default function HistorialPage() {
           </div>
         )}
       </div>
+      <AppFooter />
     </div>
   )
 }
