@@ -15,11 +15,20 @@ export function buildCacheKey(city: string, businessType: string | null): string
 export async function getCachedAnalysis(
   city: string,
   businessType: string | null,
-  mode: AppMode
+  mode: AppMode,
+  ignoreTtl = false
 ): Promise<CachedAnalysis | null> {
   const cacheKey = buildCacheKey(city, businessType)
-  const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString()
 
+  if (ignoreTtl) {
+    const { rows } = await pool.query(
+      'SELECT result, created_at FROM analyses WHERE cache_key = $1 AND mode = $2 ORDER BY created_at DESC LIMIT 1',
+      [cacheKey, mode]
+    )
+    return rows[0] ?? null
+  }
+
+  const cutoff = new Date(Date.now() - CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString()
   const { rows } = await pool.query(
     'SELECT result, created_at FROM analyses WHERE cache_key = $1 AND mode = $2 AND created_at > $3 ORDER BY created_at DESC LIMIT 1',
     [cacheKey, mode, cutoff]
