@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import { useAuth } from '@/hooks/useAuth'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import { CreditsBadge } from '@/components/CreditsBadge'
-import { NavMenu } from '@/components/NavMenu'
+import { AppHeader } from '@/components/AppHeader'
+import { AppFooter } from '@/components/AppFooter'
 
 const INPUT_CLASS =
   'w-full px-3 py-2.5 rounded-lg border border-border bg-input text-sm placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/20 transition-colors'
@@ -99,18 +97,7 @@ export default function AjustesPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="font-heading font-bold text-sm tracking-tight hover:text-primary transition-colors">
-            Opplify<span className="text-primary">.</span>ai
-          </Link>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <CreditsBadge />
-            <NavMenu />
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="max-w-sm mx-auto px-6 py-10">
         <h1 className="font-heading font-bold text-2xl tracking-tight mb-1" style={{ letterSpacing: '-0.02em' }}>
@@ -166,6 +153,7 @@ export default function AjustesPage() {
           </button>
         </form>
       </div>
+      <AppFooter />
     </div>
   )
 }
