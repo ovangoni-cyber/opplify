@@ -119,6 +119,7 @@ export default function HistorialPage() {
             {entries.map((entry) => {
               const qs = new URLSearchParams({ city: entry.city, mode: entry.mode })
               if (entry.business_type) qs.set('business_type', entry.business_type)
+              qs.set('from_history', '1')
               return (
                 <div key={entry.id} className="flex items-center justify-between gap-4 px-5 py-4 bg-card hover:bg-muted/30 transition-colors">
                   <div className="min-w-0">
