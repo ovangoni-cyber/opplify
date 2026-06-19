@@ -101,6 +101,8 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 | `src/components/ThemeSwitcher.tsx` | Two pill buttons (Dark / Light) that call `setTheme()`. |
 | `src/components/CreditsBadge.tsx` | Self-contained component that fetches and displays credit balance. Used in all navbars. |
 | `src/components/NavMenu.tsx` | Self-contained hamburger-icon dropdown (Ajustes / Historial / Cerrar sesión). Used in all navbars instead of separate links. |
+| `src/components/AppHeader.tsx` | Shared sticky header for `/buscar`, `/historial`, `/ajustes`, `/results` — logo + `ThemeSwitcher` + optional `children` slot for page-specific content + (`CreditsBadge`/email pill/`NavMenu` if logged in, else an "Acceder" button). The home page (`/`) has its own equivalent header, not migrated to this component. |
+| `src/components/AppFooter.tsx` | Shared footer (logo + tagline) for the same four pages, no props. Matches the home page's existing footer markup. |
 | `src/types/analysis.ts` | Single source of truth for all shared types (backend + frontend). |
 
 ### Auth & credits
