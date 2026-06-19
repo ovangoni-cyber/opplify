@@ -15,9 +15,10 @@ type Props = {
   city: string
   businessType: string
   mode: AppMode
+  fromHistory?: boolean
 }
 
-export function ResultsDashboard({ city, businessType, mode }: Props) {
+export function ResultsDashboard({ city, businessType, mode, fromHistory }: Props) {
   const router = useRouter()
   const { state, analyze } = useAnalysisStream()
   const { user, loading: authLoading } = useAuth()
@@ -31,10 +32,10 @@ export function ResultsDashboard({ city, businessType, mode }: Props) {
       return
     }
     if (city) {
-      analyze({ city, business_type: businessType, mode })
+      analyze({ city, business_type: businessType, mode, from_history: fromHistory })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [city, businessType, mode, user, authLoading])
+  }, [city, businessType, mode, fromHistory, user, authLoading])
 
   // Special error: no credits
   if (state.phase === 'error' && state.error === 'ERR_NO_CREDITS') {
