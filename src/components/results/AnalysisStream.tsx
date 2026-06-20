@@ -6,6 +6,7 @@ import { OpportunityScore } from './OpportunityScore'
 import { MarketSaturation } from './MarketSaturation'
 import { OpportunityList } from './OpportunityList'
 import { PainPoints } from './PainPoints'
+import { SearchLoadingState } from './SearchLoadingState'
 import { authClient } from '@/lib/auth-client'
 import { downloadPdf } from '@/lib/download-pdf'
 import type { StreamState, AnalysisResult } from '@/types/analysis'
@@ -43,12 +44,7 @@ export function AnalysisStream({ state, city, businessType }: Props) {
   }
 
   if (phase === 'loading') {
-    return (
-      <div className="flex items-center gap-3 text-muted-foreground py-12">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span className="text-sm">Obteniendo datos del mercado...</span>
-      </div>
-    )
+    return <SearchLoadingState />
   }
 
   return (
@@ -72,26 +68,7 @@ export function AnalysisStream({ state, city, businessType }: Props) {
         />
       )}
 
-      {phase === 'streaming_json' && (
-        <div className="space-y-6 animate-pulse">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-xl border bg-card p-5 h-28" />
-            <div className="rounded-xl border bg-card p-5 h-28" />
-          </div>
-          <div className="space-y-3">
-            <div className="h-5 bg-muted rounded w-44" />
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-xl border bg-card p-5 h-20" />
-            ))}
-          </div>
-          <div className="space-y-3">
-            <div className="h-5 bg-muted rounded w-36" />
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-lg border bg-card p-4 h-10" />
-            ))}
-          </div>
-        </div>
-      )}
+      {phase === 'streaming_json' && <SearchLoadingState />}
 
       {result && (
         <>
