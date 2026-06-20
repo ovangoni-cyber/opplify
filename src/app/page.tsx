@@ -1,15 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SearchForm } from '@/components/search/SearchForm'
 import { ModeToggle } from '@/components/search/ModeToggle'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import { CreditsBadge } from '@/components/CreditsBadge'
-import { NavMenu } from '@/components/NavMenu'
 import { useAuth } from '@/hooks/useAuth'
-import { CREDIT_PACKS } from '@/lib/credit-packs'
 import type { SearchParams, AppMode } from '@/types/analysis'
 
 const FEATURES = [
@@ -42,9 +39,12 @@ const STEPS = [
 export default function HomePage() {
   const router = useRouter()
   const [mode, setMode] = useState<AppMode>('market_research')
-  const { user, session } = useAuth()
-  const [buyingPack, setBuyingPack] = useState<string | null>(null)
-  const [buyError, setBuyError] = useState<string | null>(null)
+  const { user, loading: authLoading } = useAuth()
+
+  useEffect(() => {
+    if (authLoading) return
+    if (user) router.replace('/inicio')
+  }, [user, authLoading, router])
 
   const handleSubmit = (params: SearchParams) => {
     const qs = new URLSearchParams({ city: params.city, mode: params.mode })
@@ -52,33 +52,12 @@ export default function HomePage() {
     router.push(`/results?${qs.toString()}`)
   }
 
-  const handleBuy = async (packId: string) => {
-    setBuyError(null)
-    if (!user || !session?.access_token) {
-      router.push(`/auth/login?redirect=${encodeURIComponent('/#precios')}`)
-      return
-    }
-    setBuyingPack(packId)
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ packId }),
-      })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        setBuyError(data.error ?? 'Error al iniciar el pago')
-      }
-    } catch {
-      setBuyError('Error de conexión')
-    } finally {
-      setBuyingPack(null)
-    }
+  if (authLoading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -92,27 +71,12 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            {user ? (
-              <>
-                <CreditsBadge />
-                <div className="flex items-center gap-2 border border-border rounded-full pl-1 pr-3 py-0.5">
-                  <span className="h-5 w-5 rounded-full bg-primary/15 text-primary text-[10px] font-semibold flex items-center justify-center shrink-0">
-                    {user.email?.[0].toUpperCase()}
-                  </span>
-                  <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[140px]">
-                    {user.email}
-                  </span>
-                </div>
-                <NavMenu />
-              </>
-            ) : (
-              <a
-                href="/auth/login"
-                className="btn-press text-xs font-medium px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Acceder
-              </a>
-            )}
+            <a
+              href="/auth/login"
+              className="btn-press text-xs font-medium px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Acceder
+            </a>
           </div>
         </div>
       </nav>
@@ -153,7 +117,7 @@ export default function HomePage() {
                 >
                   Analizar ahora →
                 </Link>
-                <a href="#precios" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <a href="/precios" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                   Ver precios
                 </a>
               </div>
@@ -255,64 +219,6 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.text}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PRICING ── */}
-      <section id="precios" className="section-divider py-24 px-6">
-        <div className="max-w-5xl mx-auto grid sm:grid-cols-[1fr_2fr] gap-20 items-start">
-          <div>
-            <p className="label-eyebrow mb-5">Precios</p>
-            <h2 className="font-heading text-2xl font-bold tracking-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
-              Paga solo<br />lo que usas
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Sin suscripciones. Compras créditos y los usas cuando quieras.
-            </p>
-            <p className="text-xs text-muted-foreground mt-3">1 análisis de prueba al registrarte.</p>
-          </div>
-          <div className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              {CREDIT_PACKS.map((pack) => (
-                <div
-                  key={pack.id}
-                  className={`rounded-xl border p-6 flex flex-col gap-6 ${
-                    pack.featured
-                      ? 'border-primary/30 bg-primary/[0.04]'
-                      : 'border-border bg-card'
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground uppercase tracking-[0.15em]">{pack.name}</span>
-                      {pack.featured && (
-                        <span className="text-[9px] uppercase tracking-[0.15em] text-primary border border-primary/25 px-1.5 py-0.5 rounded">
-                          Popular
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-heading font-bold text-4xl tabular-nums">€{pack.priceEur}</p>
-                    <p className="text-xs text-muted-foreground">{pack.credits} análisis · {pack.description}</p>
-                  </div>
-                  <button
-                    onClick={() => handleBuy(pack.id)}
-                    disabled={buyingPack === pack.id}
-                    className={`btn-press w-full py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 ${
-                      pack.featured
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'border border-border text-foreground hover:border-foreground/30'
-                    }`}
-                  >
-                    {buyingPack === pack.id ? '...' : 'Comprar'}
-                  </button>
-                </div>
-              ))}
-            </div>
-            {buyError && (
-              <p className="text-xs text-rose-400">{buyError}</p>
-            )}
-            <p className="text-xs text-muted-foreground">Pago único · Sin renovación automática</p>
           </div>
         </div>
       </section>
