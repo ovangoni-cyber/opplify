@@ -12,7 +12,7 @@ const INPUT_CLASS =
 function LoginInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const redirect = searchParams.get('redirect') || '/buscar'
+  const redirect = searchParams.get('redirect') || '/inicio'
 
   const [tab, setTab] = useState<'login' | 'register'>('login')
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
