@@ -51,7 +51,7 @@ export function ResultsDashboard({ city, businessType, mode, fromHistory }: Prop
             Compra un pack para continuar analizando mercados y encontrando leads.
           </p>
           <Link
-            href="/#precios"
+            href="/precios"
             className="btn-press inline-block mt-4 px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
             Ver precios →
