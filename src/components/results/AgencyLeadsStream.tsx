@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAnalysisStream } from '@/hooks/useAnalysisStream'
 import { AgencyLeadsList } from './AgencyLeadsList'
+import { SearchLoadingState } from './SearchLoadingState'
 import type { StreamState, AgencyLead, AgencyLeadsResult } from '@/types/analysis'
 
 type Props = {
@@ -65,12 +66,7 @@ export function AgencyLeadsStream({ state, city, businessType }: Props) {
   }
 
   if (phase === 'loading' || phase === 'streaming_summary' || phase === 'streaming_json') {
-    return (
-      <div className="flex items-center gap-3 text-muted-foreground py-12">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <span className="text-sm">Analizando prospectos...</span>
-      </div>
-    )
+    return <SearchLoadingState />
   }
 
   return (
