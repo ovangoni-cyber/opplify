@@ -34,7 +34,7 @@ Single Next.js app. The analysis pipeline lives in one Node.js API route — no 
 ```
 Browser → POST /api/analyze (Node.js runtime)
                ├─ 1. Auth check (Bearer token → JWT verify)
-               ├─ 2. Cache check (local Postgres, 24h TTL) — skipped when `exclude` is set; on hit, returns immediately (no credit charged)
+               ├─ 2. Cache check (local Postgres, 24h TTL, unbounded when `from_history` is set) — skipped when `exclude` is set; on hit, returns immediately (no credit charged)
                ├─ 3. Credit check (decrementCredit SQL) — skipped for TEST_USER_ID
                ├─ 4. Google Places fetch (up to ~40 businesses raw)
                ├─ 5. Filter by `exclude` list (Load More Leads pattern)
@@ -65,6 +65,10 @@ Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook 
 ### Load More Leads (`exclude` param)
 
 `SearchParams.exclude?: string[]` contains business names already shown. When non-empty: cache lookup is skipped, filtered businesses are excluded, cache save and history save are both skipped. Deduplication also runs client-side in `AgencyLeadsStream`.
+
+### History view (`from_history` param)
+
+`SearchParams.from_history?: boolean` is set by the "Ver análisis →" link in `/historial` (via `?from_history=1`), propagated through `/results` and `ResultsDashboard`, into the `/api/analyze` request body. When true, `getCachedAnalysis`'s `ignoreTtl` argument drops the 24h cutoff from the cache lookup, so a history view always hits the cache (and thus never charges a credit) regardless of how old the original analysis is — the cache-hit branch already returns before the credit-decrement code runs. Only the *lookup* is affected; cache save and history insert are unchanged. If no cache row exists at all for that `cache_key`/`mode` (rare — e.g. the original row was deleted), the request falls through to the normal paid path like any cache miss.
 
 ### Key files and their responsibilities
 
