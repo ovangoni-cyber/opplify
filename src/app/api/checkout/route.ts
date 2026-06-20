@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     const session = await getStripe().checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}/?credits_added=1`,
-      cancel_url: `${siteUrl}/#precios`,
+      success_url: `${siteUrl}/inicio?credits_added=1`,
+      cancel_url: `${siteUrl}/precios`,
       metadata: {
         user_id: payload.sub,
         pack_id: pack.id,
