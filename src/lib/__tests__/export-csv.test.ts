@@ -19,7 +19,7 @@ const baseLead: AgencyLead = {
 describe('buildCsvContent', () => {
   it('includes header row', () => {
     const csv = buildCsvContent([])
-    expect(csv).toContain('Nombre,Dirección,Rating,Reseñas,Score,Pain Points,Servicios,Pitch')
+    expect(csv).toContain('Nombre,Dirección,Rating,Reseñas,Score,Pain Points,Servicios,Pitch,Teléfono,Web')
   })
 
   it('renders a lead row with correct values', () => {
@@ -30,6 +30,15 @@ describe('buildCsvContent', () => {
     expect(csv).toContain('187')
     expect(csv).toContain('Sin web propia | Sin reservas online')
     expect(csv).toContain('web_redesign | seo')
+    expect(csv).toContain('+54 11 4444 5555')
+    expect(csv).toContain('https://laesquinadepalermo.example.com')
+  })
+
+  it('renders empty phone/website fields when null', () => {
+    const lead = { ...baseLead, phone: null, website: null }
+    const csv = buildCsvContent([lead])
+    const dataLine = csv.trim().split('\n')[1]
+    expect(dataLine.endsWith(',,')).toBe(true)
   })
 
   it('wraps fields containing commas in double quotes', () => {

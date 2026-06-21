@@ -79,6 +79,8 @@ export function AgencyLeadsPdf({ result, city, businessType, agencyName, logoDat
             </View>
             <Text style={styles.leadMeta}>
               {lead.address} · {lead.rating > 0 ? `${lead.rating}★ (${lead.review_count})` : 'Sin rating'}
+              {lead.phone ? ` · ${lead.phone}` : ''}
+              {lead.website ? ` · ${lead.website}` : ''}
             </Text>
             {lead.recommended_services.length > 0 && (
               <Text style={styles.leadServices}>

@@ -8,7 +8,7 @@ function escapeField(value: string): string {
 }
 
 export function buildCsvContent(leads: AgencyLead[]): string {
-  const header = 'Nombre,Dirección,Rating,Reseñas,Score,Pain Points,Servicios,Pitch'
+  const header = 'Nombre,Dirección,Rating,Reseñas,Score,Pain Points,Servicios,Pitch,Teléfono,Web'
   const rows = leads.map((lead) => [
     escapeField(lead.business_name),
     escapeField(lead.address),
@@ -18,6 +18,8 @@ export function buildCsvContent(leads: AgencyLead[]): string {
     escapeField(lead.pain_points.join(' | ')),
     escapeField(lead.recommended_services.join(' | ')),
     escapeField(lead.pitch),
+    escapeField(lead.phone ?? ''),
+    escapeField(lead.website ?? ''),
   ].join(','))
   return [header, ...rows].join('\n')
 }
