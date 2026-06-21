@@ -62,6 +62,12 @@ Both modes use the same two-phase streaming protocol and the same API route. The
 
 Cache hits use a different prefix: `---CACHED---\n---JSON---\n{JSON}`. The hook (`useAnalysisStream`) detects which path it's on and renders accordingly.
 
+**`agency_leads` is an exception to "streamed token by token."** Its JSON gets corrected after parsing (`attachContactInfo` in `src/lib/claude.ts` merges `phone`/`website` from Google Places into each lead by business name, since Claude's own output never contains them — see "Lead contacts" below), and a live client only ever sees that corrected version, not Claude's raw output. So for this mode, `streamAnalysis` withholds real content during generation — sending a one-space heartbeat per delta instead, to avoid nginx's default `proxy_read_timeout` on a slow generation — then emits the summary text + `---JSON---` + the corrected JSON in one final write once `attachContactInfo` has run. The wire format the client parses is unchanged; only *when* the bytes arrive differs. `market_research` is unaffected and still streams every delta live.
+
+### Lead contacts (`agency_leads` only)
+
+Each `AgencyLead` carries `phone`/`website` (`string | null`), sourced exclusively from Google Places (`internationalPhoneNumber`/`websiteUri` in the field mask) — never from Claude, so an LLM can never alter a real phone number. `attachContactInfo` merges them in by case-insensitive business-name match against `PlacesContext.businesses` after Claude's JSON is parsed. Shown on the lead card (`tel:`/website links, omitted entirely when both are absent), in the CSV export (`Teléfono`/`Web` columns), and in the PDF export (appended to the existing address/rating line).
+
 ### Load More Leads (`exclude` param)
 
 `SearchParams.exclude?: string[]` contains business names already shown. When non-empty: cache lookup is skipped, filtered businesses are excluded, cache save and history save are both skipped. Deduplication also runs client-side in `AgencyLeadsStream`.
