@@ -12,8 +12,8 @@ const baseLead: AgencyLead = {
   recommended_services: ['web_redesign', 'seo'],
   summary: 'Buen restaurante con poca presencia digital.',
   pitch: 'Tu web puede generar reservas automáticas.',
-  phone: '+54 11 4779-1400',
-  website: 'https://example.com',
+  phone: '+54 11 4444 5555',
+  website: 'https://laesquinadepalermo.example.com',
 }
 
 describe('buildCsvContent', () => {
