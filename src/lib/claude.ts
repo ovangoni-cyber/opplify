@@ -20,6 +20,24 @@ export function parseAgencyLeadsJson(raw: string): AgencyLeadsResult {
   return parsed as AgencyLeadsResult
 }
 
+export function attachContactInfo(
+  result: AgencyLeadsResult,
+  context: PlacesContext
+): AgencyLeadsResult {
+  const byName = new Map(context.businesses.map((b) => [b.name.toLowerCase(), b]))
+  return {
+    ...result,
+    leads: result.leads.map((lead) => {
+      const match = byName.get(lead.business_name.toLowerCase())
+      return {
+        ...lead,
+        phone: match?.phone ?? null,
+        website: match?.website ?? null,
+      }
+    }),
+  }
+}
+
 function buildPrompt(
   city: string,
   businessType: string | null,
@@ -190,11 +208,11 @@ export async function streamAnalysis(
 
   if (mode === 'agency_leads') {
     try {
-      return parseAgencyLeadsJson(jsonStr)
+      return attachContactInfo(parseAgencyLeadsJson(jsonStr), context)
     } catch {
       const match = jsonStr.match(/\{[\s\S]*\}/)
       if (!match) throw new Error('No JSON object found in Claude agency leads response')
-      return parseAgencyLeadsJson(match[0])
+      return attachContactInfo(parseAgencyLeadsJson(match[0]), context)
     }
   }
 

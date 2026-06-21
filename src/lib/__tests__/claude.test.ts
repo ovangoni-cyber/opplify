@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { parseAnalysisJson, parseAgencyLeadsJson } from '../claude'
+import { parseAnalysisJson, parseAgencyLeadsJson, attachContactInfo } from '../claude'
+import type { PlacesContext, AgencyLeadsResult } from '@/types/analysis'
 
 const VALID_RESULT = {
   market: {
@@ -97,5 +98,91 @@ describe('parseAgencyLeadsJson', () => {
   it('handles whitespace around JSON', () => {
     const result = parseAgencyLeadsJson('  ' + JSON.stringify(VALID_LEADS_RESULT) + '\n')
     expect(result.total_analyzed).toBe(20)
+  })
+})
+
+const CONTEXT: PlacesContext = {
+  businesses: [
+    {
+      name: 'Pizzería Roma',
+      rating: 2.8,
+      review_count: 34,
+      address: 'Calle Mayor 10',
+      types: ['restaurant'],
+      price_level: 2,
+      recent_reviews: [],
+      phone: '+34 912 345 678',
+      website: 'https://pizzeriaroma.example.com',
+    },
+    {
+      name: 'Café Sin Contacto',
+      rating: 4.0,
+      review_count: 10,
+      address: 'Plaza Mayor 1',
+      types: ['cafe'],
+      price_level: 1,
+      recent_reviews: [],
+      phone: null,
+      website: null,
+    },
+  ],
+  avg_rating: 3.4,
+  rating_distribution: { '1': 0, '2': 0, '3': 1, '4': 1, '5': 0 },
+  total_count: 2,
+}
+
+function leadsResultWith(businessName: string): AgencyLeadsResult {
+  return {
+    leads: [
+      {
+        business_name: businessName,
+        address: 'Calle Mayor 10',
+        rating: 2.8,
+        review_count: 34,
+        lead_score: 82,
+        pain_points: ['No responde reviews'],
+        recommended_services: ['reputation'],
+        summary: 'Pizzería con alto tráfico pero mala gestión digital.',
+        pitch: 'Sus competidores responden reviews y usted no.',
+        phone: null,
+        website: null,
+      },
+    ],
+    total_analyzed: 2,
+    generated_at: '2026-06-21T10:00:00Z',
+    model_used: 'claude-sonnet-4-6',
+  }
+}
+
+describe('attachContactInfo', () => {
+  it('copies phone and website on an exact name match', () => {
+    const result = attachContactInfo(leadsResultWith('Pizzería Roma'), CONTEXT)
+    expect(result.leads[0].phone).toBe('+34 912 345 678')
+    expect(result.leads[0].website).toBe('https://pizzeriaroma.example.com')
+  })
+
+  it('matches case-insensitively', () => {
+    const result = attachContactInfo(leadsResultWith('pizzería roma'), CONTEXT)
+    expect(result.leads[0].phone).toBe('+34 912 345 678')
+    expect(result.leads[0].website).toBe('https://pizzeriaroma.example.com')
+  })
+
+  it('leaves phone and website null when no business matches the name', () => {
+    const result = attachContactInfo(leadsResultWith('Restaurante Inexistente'), CONTEXT)
+    expect(result.leads[0].phone).toBeNull()
+    expect(result.leads[0].website).toBeNull()
+  })
+
+  it('leaves phone and website null when the matched business has none', () => {
+    const result = attachContactInfo(leadsResultWith('Café Sin Contacto'), CONTEXT)
+    expect(result.leads[0].phone).toBeNull()
+    expect(result.leads[0].website).toBeNull()
+  })
+
+  it('does not mutate other lead fields', () => {
+    const result = attachContactInfo(leadsResultWith('Pizzería Roma'), CONTEXT)
+    expect(result.leads[0].lead_score).toBe(82)
+    expect(result.leads[0].pain_points).toEqual(['No responde reviews'])
+    expect(result.total_analyzed).toBe(2)
   })
 })
