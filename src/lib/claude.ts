@@ -198,9 +198,16 @@ export async function streamAnalysis(
       // agency_leads' JSON gets corrected by attachContactInfo below — forwarding
       // Claude's raw deltas live would ship the uncorrected JSON to the client on
       // a fresh (non-cached) search. AgencyLeadsStream never renders this text
-      // progressively, so withholding it until the corrected version is ready
-      // below has no visible effect on the streaming UX.
-      if (mode !== 'agency_leads') {
+      // progressively, so withholding the real content until the corrected
+      // version is ready below has no visible effect on the streaming UX. A
+      // whitespace heartbeat per delta keeps bytes flowing on the wire so a
+      // slow generation doesn't trip nginx's idle proxy_read_timeout — the
+      // agency_leads prompt asks Claude to emit virtually nothing before the
+      // JSON delimiter, so without this almost the entire response would
+      // otherwise go out in one write at the very end.
+      if (mode === 'agency_leads') {
+        onChunk(' ')
+      } else {
         onChunk(chunk)
       }
     }
