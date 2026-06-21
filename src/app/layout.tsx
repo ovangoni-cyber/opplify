@@ -15,9 +15,25 @@ const dmSans = DM_Sans({
   weight: ['300', '400', '500', '600'],
 })
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://opplify.es'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Opplify.ai',
   description: 'Detecta oportunidades de negocio locales con IA',
+  openGraph: {
+    title: 'Opplify.ai',
+    description: 'Detecta oportunidades de negocio locales con IA',
+    url: SITE_URL,
+    siteName: 'Opplify.ai',
+    locale: 'es_ES',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Opplify.ai',
+    description: 'Detecta oportunidades de negocio locales con IA',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
