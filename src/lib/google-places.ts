@@ -14,6 +14,8 @@ type PlaceItem = {
   types?: string[]
   priceLevel?: string
   id?: string
+  internationalPhoneNumber?: string
+  websiteUri?: string
 }
 
 type PlacesSearchResponse = {
@@ -62,7 +64,7 @@ async function searchPlacesPage(
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': apiKey,
       'X-Goog-FieldMask':
-        'places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.types,places.priceLevel,places.id,nextPageToken',
+        'places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.types,places.priceLevel,places.id,places.internationalPhoneNumber,places.websiteUri,nextPageToken',
     },
     body: JSON.stringify(body),
   })
@@ -167,6 +169,8 @@ export async function fetchAndNormalizePlaces(
       types: p.types ?? [],
       price_level: priceLevelFromString(p.priceLevel),
       recent_reviews: reviews,
+      phone: p.internationalPhoneNumber ?? null,
+      website: p.websiteUri ?? null,
     })
   }
 

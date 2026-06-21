@@ -61,6 +61,8 @@ export type AgencyLead = {
   recommended_services: AgencyService[]
   summary: string
   pitch: string
+  phone: string | null
+  website: string | null
 }
 
 export type AgencyLeadsResult = {
@@ -102,6 +104,8 @@ export type NormalizedBusiness = {
   types: string[]
   price_level: number | null
   recent_reviews: string[]
+  phone: string | null
+  website: string | null
 }
 
 export type PlacesContext = {
