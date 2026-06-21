@@ -90,6 +90,28 @@ export function AgencyLeadCard({ lead, city = '' }: Props) {
           <p className="text-xs text-muted-foreground mt-0.5">
             {lead.rating > 0 ? `${lead.rating}★` : 'Sin rating'} · {lead.review_count} reseñas
           </p>
+          {(lead.phone || lead.website) && (
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-3">
+              {lead.phone && (
+                <a
+                  href={`tel:${lead.phone.replace(/\s+/g, '')}`}
+                  className="hover:text-primary transition-colors"
+                >
+                  {lead.phone}
+                </a>
+              )}
+              {lead.website && (
+                <a
+                  href={lead.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors truncate"
+                >
+                  Web ↗
+                </a>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-center shrink-0 text-right">
           <span className={`font-heading text-4xl font-bold tabular-nums leading-none ${leadScoreColor(lead.lead_score)}`}>
