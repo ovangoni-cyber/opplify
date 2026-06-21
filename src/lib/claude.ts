@@ -195,7 +195,14 @@ export async function streamAnalysis(
     ) {
       const chunk = event.delta.text
       fullText += chunk
-      onChunk(chunk)
+      // agency_leads' JSON gets corrected by attachContactInfo below — forwarding
+      // Claude's raw deltas live would ship the uncorrected JSON to the client on
+      // a fresh (non-cached) search. AgencyLeadsStream never renders this text
+      // progressively, so withholding it until the corrected version is ready
+      // below has no visible effect on the streaming UX.
+      if (mode !== 'agency_leads') {
+        onChunk(chunk)
+      }
     }
   }
 
@@ -207,13 +214,17 @@ export async function streamAnalysis(
   const jsonStr = fullText.slice(delimiterIndex + JSON_DELIMITER.length).trim()
 
   if (mode === 'agency_leads') {
+    let result: AgencyLeadsResult
     try {
-      return attachContactInfo(parseAgencyLeadsJson(jsonStr), context)
+      result = attachContactInfo(parseAgencyLeadsJson(jsonStr), context)
     } catch {
       const match = jsonStr.match(/\{[\s\S]*\}/)
       if (!match) throw new Error('No JSON object found in Claude agency leads response')
-      return attachContactInfo(parseAgencyLeadsJson(match[0]), context)
+      result = attachContactInfo(parseAgencyLeadsJson(match[0]), context)
     }
+    const summaryText = fullText.slice(0, delimiterIndex)
+    onChunk(summaryText + JSON_DELIMITER + '\n' + JSON.stringify(result))
+    return result
   }
 
   try {
